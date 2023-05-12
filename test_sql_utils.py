@@ -1,0 +1,101 @@
+#from sql_utils import add_movement, add_drug, get_first_row_id, update_drug
+import sql_utils
+from create_tables import create_all_tables
+import sqlite3
+import pytest
+import os
+import datetime
+
+@pytest.fixture(scope='module')
+def db_connection():
+    path_to_database = 'test.db'
+    # Remove the databse is already existing
+    if os.path.exists(path_to_database):
+        os.remove(path_to_database)
+
+    # Fresh create the tables
+    create_all_tables(path_to_database)
+
+    conn =  sqlite3.connect(path_to_database)
+    yield conn
+    conn.close()
+
+def test_add_drug(db_connection):
+    sql_utils.add_drug(
+        conn=db_connection,
+        name='pippo',
+        dose='500',
+        units='ml',
+        expiration='5-5-2025',
+        pieces_per_box=10,
+        drug_type='comprimidos',
+        lote='a123',
+              )
+    
+def test_update_drug(db_connection):
+    table_name = 'drugs'
+    original = {
+        'name': 'pippo',
+        'dose': '100',
+        'units': 'cl',
+        'expiration': '2023-01-01',
+        'pieces_per_box': 10,
+        'type': 'compridos',
+        'lote': 'a123',
+        'stock': 0,
+        'last_inventory_date': '2023-01-01'
+        }
+    modified = {
+        'name': 'franco',
+        'dose': '200',
+        'units': 'ml',
+        'expiration': '2023-01-01',
+        'pieces_per_box': 20,
+        'type': 'ampulas',
+        'lote': 'b123',
+        'stock': 0,
+        'last_inventory_date': '2025-01-01'
+        }
+
+    sql_utils.add_drug(
+        conn=db_connection,
+        name=original['name'],
+        dose=original['dose'],
+        units=original['units'],
+        expiration=original['expiration'],
+        pieces_per_box=original['pieces_per_box'],
+        drug_type=original['type'],
+        lote=original['lote'],
+        stock=original['stock'],
+            )
+    
+    id = sql_utils.get_last_row_id(db_connection, table_name)
+    sql_utils.update_drug(
+        conn=db_connection,
+        drug_id=id,
+        name=modified['name'],
+        dose=modified['dose'],
+        units=modified['units'],
+        expiration=modified['expiration'],
+        pieces_per_box=modified['pieces_per_box'],
+        drug_type=modified['type'],
+        lote=modified['lote'],
+        stock=modified['stock'],
+        last_inventory_date=modified['last_inventory_date'],
+            )
+ 
+    drug = sql_utils.get_row(
+        conn=db_connection,
+        table_name=table_name,
+        id=id,
+    )
+    columns = sql_utils.get_table_col_names(db_connection, table_name)
+    drug_dict = sql_utils.row_to_dict(drug, columns) 
+    drug_dict.pop('id')
+    assert drug_dict == modified
+    
+
+
+def pytest_sessionfinish(session, exitstatus):
+    # Close the database connection after all tests have finished
+    db_connection().close()

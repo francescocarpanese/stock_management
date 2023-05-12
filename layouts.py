@@ -16,7 +16,7 @@ def get_new_drug_layout():
         [
             sg.Text('Expiracao'),
             sg.CalendarButton("Choose Date", target="-in_DATE-", format="%Y-%m-%d", default_date_m_d_y=(1, 1, 2023)), 
-            sg.Input(key="-in_DATE-", visible=False)
+            sg.Input(key="-in_DATE-", visible=True, disabled=True)
         ],
         [
             sg.Text('Numero pexca dentro 1 caixa'),
@@ -55,22 +55,21 @@ def get_main_layout():
             sg.Button('Nuovo movimento', key='-but_new_mov'),
             sg.Button('Correccao farmaco', key='-but_correct_drug'),
             sg.Button('Nuovo Farmaco', key='-but_new_drug-'),
-            sg.Button('Report', key='-create_report'),
         ]
 
     ]
     return layout
 
-def get_new_movement_layout(nome, expiration, lote):
+def get_new_movement_layout():
     layout = [
             [
-                sg.Text(f'Nome: {nome}')
+                sg.Text(f'Nome:')
             ],
             [
-                sg.Text(f'Expiracao: {expiration}')
+                sg.Text(f'Expiracao:')
             ],
             [
-                sg.Text(f'Lote: {lote}')
+                sg.Text(f'Lote:')
             ],
             [
                 sg.HorizontalSeparator(),
