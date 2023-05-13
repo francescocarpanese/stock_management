@@ -4,7 +4,7 @@ from create_tables import create_all_tables
 import sqlite3
 import pytest
 import os
-import datetime
+from datetime import datetime, date
 
 @pytest.fixture(scope='module')
 def db_connection():
@@ -26,7 +26,7 @@ def test_add_drug(db_connection):
         name='pippo',
         dose='500',
         units='ml',
-        expiration='5-5-2025',
+        expiration=date(2023,1,1),
         pieces_per_box=10,
         drug_type='comprimidos',
         lote='a123',
@@ -38,23 +38,23 @@ def test_update_drug(db_connection):
         'name': 'pippo',
         'dose': '100',
         'units': 'cl',
-        'expiration': '2023-01-01',
+        'expiration': date(2023,1,1),
         'pieces_per_box': 10,
         'type': 'compridos',
         'lote': 'a123',
         'stock': 0,
-        'last_inventory_date': '2023-01-01'
+        'last_inventory_date': date(2023,1,1)
         }
     modified = {
         'name': 'franco',
         'dose': '200',
         'units': 'ml',
-        'expiration': '2023-01-01',
+        'expiration': date(2025,1,1),
         'pieces_per_box': 20,
         'type': 'ampulas',
         'lote': 'b123',
         'stock': 0,
-        'last_inventory_date': '2025-01-01'
+        'last_inventory_date': date(2025,1,2)
         }
 
     sql_utils.add_drug(

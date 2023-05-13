@@ -42,12 +42,12 @@ def get_main_layout():
     layout = [
         [
             sg.Text('Nome'),
-            sg.Input('',key='-in_nome-'),
+            sg.Input('',key='-in_name-', enable_events=True),
         ],
         [
             sg.Table(
             values = [],
-            headings= ['Nome','Dosagem','Expiracao','Numero de pecas dentro 1 caixinha','Forma','Lote','Stock presente'],
+            headings= ['Nome','Dosagem','Units','Expiracao','Numero de pecas dentro 1 caixinha','Forma','Lote','Stock presente'],
             key='-list_table-',
             )
         ],

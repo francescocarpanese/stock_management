@@ -1,5 +1,5 @@
 
-from datetime import datetime
+from datetime import datetime, date
 
 def add_drug(conn, name, dose, units, expiration, pieces_per_box, drug_type, lote, stock=0):
     c = conn.cursor()
@@ -7,7 +7,7 @@ def add_drug(conn, name, dose, units, expiration, pieces_per_box, drug_type, lot
     c.close()
     conn.commit()
     
-def update_drug(conn, drug_id, name, dose, units, expiration, pieces_per_box, drug_type, lote, stock=0, last_inventory_date=0):
+def update_drug(conn, drug_id, name, dose, units, expiration, pieces_per_box, drug_type, lote, stock=0, last_inventory_date=date(1990,1,1)):
     print(f'printing_last_inventory{last_inventory_date}')
     c = conn.cursor()
     c.execute('UPDATE drugs SET  name=?, dose=?, units=?, expiration=?, pieces_per_box=?, type=?, lote=?, stock=?, last_inventory_date=? WHERE id=?', (name, dose, units, expiration, pieces_per_box, drug_type, lote, stock, last_inventory_date, drug_id))
@@ -54,7 +54,10 @@ def get_row(conn, table_name, id):
     return row
 
 def row_to_dict(row, columns):
-    return dict(zip(columns, row))
+    row_dict = dict(zip(columns, row))
+    row_dict['expiration']= datetime.strptime(row_dict['expiration'], '%Y-%m-%d').date()
+    row_dict['last_inventory_date']= datetime.strptime(row_dict['last_inventory_date'], '%Y-%m-%d').date()
+    return row_dict
 
 def parse_drug(conn, table_name, row):
     columns = get_table_col_names(conn, table_name)

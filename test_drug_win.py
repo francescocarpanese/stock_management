@@ -19,6 +19,9 @@ def db_connection():
 
 
 def test_new_drug(db_connection):
+    '''
+    Test saving new drug from the GUI
+    '''
     layout = get_new_drug_layout()
     window = sg.Window('My GUI', layout)
 
@@ -35,6 +38,9 @@ def test_new_drug(db_connection):
     window.close()
 
 def test_fill_drug():
+    '''
+    Test filling drug data into GUI
+    '''
 
     layout = get_new_drug_layout()
     window = sg.Window('My GUI', layout)
@@ -57,7 +63,6 @@ def test_fill_drug():
             break
 
     window.close()
-
 
 
 
