@@ -23,7 +23,7 @@ def test_new_drug(db_connection):
     Test saving new drug from the GUI
     '''
     layout = get_new_drug_layout()
-    window = sg.Window('My GUI', layout)
+    window = sg.Window('Test window and save', layout)
 
     while True:
         event, values = window.read()
@@ -32,8 +32,9 @@ def test_new_drug(db_connection):
         elif event=='-but_save_new_drug':
             drugs_win_utils.save_drug(window,event,values,db_connection)
             break
-        elif event=='-but-exit_new_drug':
-            break
+        # TODO tigger a save event
+        # TODO check sql after saving.
+
 
     window.close()
 
@@ -41,6 +42,8 @@ def test_fill_drug():
     '''
     Test filling drug data into GUI
     '''
+    # TODO parametrize the event. Saving, and exit.
+    # TODO check also the update case, not just the new drug
 
     layout = get_new_drug_layout()
     window = sg.Window('My GUI', layout)
@@ -57,10 +60,14 @@ def test_fill_drug():
         lote='kk23'
     )
 
+    # TODO check the fields after filling.
     while True:
         event, values = window.read()
         if event == sg.WIN_CLOSED:
             break
+        # TODO trigger a save event
+    
+    # TODO check sql after saving
 
     window.close()
 

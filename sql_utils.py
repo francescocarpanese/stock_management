@@ -8,16 +8,22 @@ def add_drug(conn, name, dose, units, expiration, pieces_per_box, drug_type, lot
     conn.commit()
     
 def update_drug(conn, drug_id, name, dose, units, expiration, pieces_per_box, drug_type, lote, stock=0, last_inventory_date=date(1990,1,1)):
-    print(f'printing_last_inventory{last_inventory_date}')
     c = conn.cursor()
-    c.execute('UPDATE drugs SET  name=?, dose=?, units=?, expiration=?, pieces_per_box=?, type=?, lote=?, stock=?, last_inventory_date=? WHERE id=?', (name, dose, units, expiration, pieces_per_box, drug_type, lote, stock, last_inventory_date, drug_id))
+    c.execute('UPDATE drugs SET  name=?, dose=?, units=?, expiration=?, pieces_per_box=?, type=?, lote=?, stock=?, last_inventory_date=? WHERE id=?',
+               (name, dose, units, expiration, pieces_per_box, drug_type, lote, stock, last_inventory_date, drug_id))
     c.close()
     conn.commit()
 
 def add_movement(conn, date_movement, destination_origin, pieces_moved, movement_type, signature, drug_id):
     c = conn.cursor()
-    c.execute('''INSERT INTO movements (date_movement, destination_origin, pieces_moved, movement_type, signature, entry_date, drug_id) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)''', (date_movement, destination_origin, pieces_moved, movement_type, signature, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), drug_id))
+    c.execute('''INSERT INTO movements (date_movement, destination_origin, pieces_moved, movement_type, signature, drug_id) 
+                 VALUES (?, ?, ?, ?, ?, ?)''', (date_movement, destination_origin, pieces_moved, movement_type, signature, drug_id))
+    c.close()
+
+def update_movement(conn, date_movement, destination_origin, pieces_moved, movement_type, signature, mov_id):
+    c = conn.cursor()
+    c.execute('UPDATE movements SET date_movement=?, destination_origin=?, pieces_moved=?, movement_type=?, signature=? WHERE id=?',
+                (date_movement, destination_origin, pieces_moved, movement_type, signature, mov_id))
     c.close()
 
 def get_first_row_id(conn, table_name):
@@ -45,7 +51,6 @@ def get_table_col_names(conn, table_name):
     c.close()
     return columns
 
-
 def get_row(conn, table_name, id):
     c = conn.cursor()
     c.execute(f'SELECT * FROM {table_name} WHERE id = ?', (id,))
@@ -53,7 +58,17 @@ def get_row(conn, table_name, id):
     c.close()
     return row
 
-def row_to_dict(row, columns):
+def movement_row_to_dict(row, columns):
+    row_dict = dict(zip(columns, row))
+    row_dict['date_movement'] = datetime.strptime(row_dict['date_movement'], '%Y-%m-%d').date()
+    row_dict['entry_datetime'] = datetime.strptime(row_dict['entry_datetime'], '%Y-%m-%d %H:%M:%S')
+    return row_dict
+
+def parse_movement(conn,table_name,row):
+    columns = get_table_col_names(conn, table_name)
+    return movement_row_to_dict(row, columns)
+
+def drug_row_to_dict(row, columns):
     row_dict = dict(zip(columns, row))
     row_dict['expiration']= datetime.strptime(row_dict['expiration'], '%Y-%m-%d').date()
     row_dict['last_inventory_date']= datetime.strptime(row_dict['last_inventory_date'], '%Y-%m-%d').date()
@@ -61,5 +76,5 @@ def row_to_dict(row, columns):
 
 def parse_drug(conn, table_name, row):
     columns = get_table_col_names(conn, table_name)
-    return row_to_dict(row, columns)
+    return drug_row_to_dict(row, columns)
     

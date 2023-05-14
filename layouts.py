@@ -55,6 +55,7 @@ def get_main_layout():
             sg.Button('Nuovo movimento', key='-but_new_mov'),
             sg.Button('Correccao farmaco', key='-but_correct_drug'),
             sg.Button('Nuovo Farmaco', key='-but_new_drug-'),
+            sg.Button('Report', key='-but_report-')
         ]
 
     ]
@@ -63,13 +64,23 @@ def get_main_layout():
 def get_new_movement_layout():
     layout = [
             [
-                sg.Text(f'Nome:')
+                sg.Text('Nome:'),
+                sg.Text('',key='-txt_drug_name-'),
+                sg.Text('Dosagemn:'),
+                sg.Text('', key='-txt_dosagem-'), 
+                sg.Text('', key='-txt_dosagem_unit-'),
             ],
             [
-                sg.Text(f'Expiracao:')
+                sg.Text('Expiracao:'),
+                sg.Text(key="-txt_DATE-", visible=True),
+                sg.Text('Numero pexca dentro 1 caixa:'),
+                sg.Text(0, key='-txt_pieces_in_box-'),
             ],
             [
-                sg.Text(f'Lote:')
+                sg.Text('Forma:'),
+                sg.Text('', key='-txt_forma-'),
+                sg.Text('Lote:'),
+                sg.Text('', key='-txt_lote-'),
             ],
             [
                 sg.HorizontalSeparator(),
@@ -104,8 +115,15 @@ def get_new_movement_layout():
                 sg.Input('', key='-in_signature-')
             ],
             [
-                sg.Button('Guarda'),
-                sg.Button('Fecha'),
+                sg.Button('Guarda', key='-but_save_mov-'),
+                sg.Button('Fecha', key='-but_exit_mov'),
+            ]
+            [
+                sg.HorizontalSeparator(),
+            ],
+            [
+                sg.Text('Numero dos pecas movido'),
+                sg.Text(disabled=True, key='-n_peca_movidos-')
             ]
         ]
 

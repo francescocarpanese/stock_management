@@ -30,10 +30,20 @@ def create_all_tables(path_to_database):
             pieces_moved INTEGER,
             movement_type TEXT CHECK(movement_type IN ('entry', 'exit', 'inventory')),
             signature TEXT,
-            entry_datetime DATE,
+            entry_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             drug_id INTEGER,
             FOREIGN KEY (drug_id) REFERENCES drugs(id)
             )
+        ''')
+
+    # Store the timestamp of the modification of an entry
+    c.execute('''CREATE TRIGGER update_movements_entry_datetime
+                    AFTER UPDATE ON movements
+                    FOR EACH ROW
+                    WHEN OLD.entry_datetime <> CURRENT_TIMESTAMP
+                    BEGIN
+                    UPDATE movements SET entry_datetime = CURRENT_TIMESTAMP WHERE id = OLD.id;
+                    END;
         ''')
 
     conn.commit()

@@ -26,13 +26,13 @@ while True:
     elif event == '-but_new_drug-':
         drugs_win_utils.drug_session(conn)
     elif event == '-but_correct_drug':
+        # TODO move to function
         if len(values['-list_table-']) > 0:
             selected_idx = values['-list_table-'][0]
             print(rows[selected_idx][0])
             row = sql_utils.get_row(conn, 'drugs', rows[selected_idx][0])
             drug_dict = sql_utils.parse_drug(conn, 'drugs', row)
             drugs_win_utils.drug_session(conn, drug_dict)
-
 
 
     if values['-in_name-'] == '':
