@@ -19,12 +19,14 @@ def add_movement(conn, date_movement, destination_origin, pieces_moved, movement
     c.execute('''INSERT INTO movements (date_movement, destination_origin, pieces_moved, movement_type, signature, drug_id) 
                  VALUES (?, ?, ?, ?, ?, ?)''', (date_movement, destination_origin, pieces_moved, movement_type, signature, drug_id))
     c.close()
+    conn.commit()
 
 def update_movement(conn, date_movement, destination_origin, pieces_moved, movement_type, signature, mov_id):
     c = conn.cursor()
     c.execute('UPDATE movements SET date_movement=?, destination_origin=?, pieces_moved=?, movement_type=?, signature=? WHERE id=?',
                 (date_movement, destination_origin, pieces_moved, movement_type, signature, mov_id))
     c.close()
+    conn.commit()
 
 def get_first_row_id(conn, table_name):
     c = conn.cursor()
@@ -77,4 +79,3 @@ def drug_row_to_dict(row, columns):
 def parse_drug(conn, table_name, row):
     columns = get_table_col_names(conn, table_name)
     return drug_row_to_dict(row, columns)
-    

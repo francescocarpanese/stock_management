@@ -1,4 +1,3 @@
-#from sql_utils import add_movement, add_drug, get_first_row_id, update_drug
 import sql_utils
 from create_tables import create_all_tables
 import sqlite3
@@ -31,6 +30,8 @@ def test_add_drug(db_connection):
         drug_type='comprimidos',
         lote='a123',
               )
+    
+    # TODO check that it was inserted correctly
     
 def test_update_drug(db_connection):
     table_name = 'drugs'
@@ -90,10 +91,118 @@ def test_update_drug(db_connection):
         id=id,
     )
     columns = sql_utils.get_table_col_names(db_connection, table_name)
-    drug_dict = sql_utils.row_to_dict(drug, columns) 
+    drug_dict = sql_utils.drug_row_to_dict(drug, columns) 
     drug_dict.pop('id')
     assert drug_dict == modified
     
+
+def test_add_movement(db_connection):
+    original = {
+            'date_movement': date(2023, 1,1),
+            'destination_origin': 'Prince Pharma',
+            'pieces_moved': 10,
+            'movement_type': 'entry',
+            'signature': 'Francesco',
+    }
+
+    # Add a drug to test movement
+    sql_utils.add_drug(
+        conn=db_connection,
+        name='test_mov',
+        dose='1',
+        units='l',
+        expiration=date(2023,1,1),
+        pieces_per_box=1,
+        drug_type='comprimidos',
+        lote='a123',
+              )
+    
+    drug_id = sql_utils.get_last_row_id(db_connection, 'drugs')
+    original['drug_id'] = drug_id
+
+    sql_utils.add_movement(
+        conn = db_connection,
+        date_movement= original['date_movement'] ,
+        destination_origin= original['destination_origin'],
+        pieces_moved= original['pieces_moved'],
+        movement_type= original['movement_type'], 
+        signature= original['signature'], 
+        drug_id= drug_id,
+    )
+
+    movement_id = sql_utils.get_last_row_id(db_connection, 'movements')
+    
+    movement = sql_utils.get_row(db_connection, 'movements', movement_id)
+    movement_dict = sql_utils.parse_movement(db_connection, 'movements', movement)
+
+    # Pop filed that are generated automatically
+    movement_dict.pop('id')
+    movement_dict.pop('entry_datetime')
+
+    assert movement_dict == original
+    
+def test_update_movement(db_connection):
+    table_name = 'movements'
+    original = {
+            'date_movement': date(2023, 1,1),
+            'destination_origin': 'Prince Pharma',
+            'pieces_moved': 10,
+            'movement_type': 'entry',
+            'signature': 'Francesco',
+    }
+    modified = {
+            'date_movement': date(2025, 1,1),
+            'destination_origin': 'pippo',
+            'pieces_moved': 20,
+            'movement_type': 'exit',
+            'signature': 'Francesco_1',
+    }
+
+    sql_utils.add_drug(
+        conn=db_connection,
+        name='test_mov',
+        dose='1',
+        units='l',
+        expiration=date(2023,1,1),
+        pieces_per_box=1,
+        drug_type='comprimidos',
+        lote='a123',
+              )
+    
+    drug_id = sql_utils.get_last_row_id(db_connection, 'drugs')
+    original['drug_id'] = drug_id
+    modified['drug_id'] = drug_id
+
+    sql_utils.add_movement(
+        conn = db_connection,
+        date_movement= original['date_movement'] ,
+        destination_origin= original['destination_origin'],
+        pieces_moved= original['pieces_moved'],
+        movement_type= original['movement_type'], 
+        signature= original['signature'], 
+        drug_id= drug_id,
+    )
+
+    movement_id = sql_utils.get_last_row_id(db_connection, 'movements')
+
+    sql_utils.update_movement(
+        conn = db_connection,
+        date_movement= modified['date_movement'] ,
+        destination_origin= modified['destination_origin'],
+        pieces_moved= modified['pieces_moved'],
+        movement_type= modified['movement_type'], 
+        signature= modified['signature'], 
+        mov_id=movement_id,
+    )
+
+    movement = sql_utils.get_row(db_connection, 'movements', movement_id)
+    movement_dict = sql_utils.parse_movement(db_connection, 'movements', movement)
+
+    # Pop filed that are generated automatically
+    movement_dict.pop('id')
+    movement_dict.pop('entry_datetime')
+
+    assert movement_dict == modified
 
 
 def pytest_sessionfinish(session, exitstatus):

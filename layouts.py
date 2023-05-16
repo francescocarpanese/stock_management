@@ -52,7 +52,7 @@ def get_main_layout():
             )
         ],
         [
-            sg.Button('Nuovo movimento', key='-but_new_mov'),
+            sg.Button('Nuovo movimento', key='-but_new_mov-'),
             sg.Button('Correccao farmaco', key='-but_correct_drug'),
             sg.Button('Nuovo Farmaco', key='-but_new_drug-'),
             sg.Button('Report', key='-but_report-')
@@ -64,22 +64,22 @@ def get_main_layout():
 def get_new_movement_layout():
     layout = [
             [
-                sg.Text('Nome:'),
-                sg.Text('',key='-txt_drug_name-'),
-                sg.Text('Dosagemn:'),
+                sg.Text('Nome:', size=10),
+                sg.Text('',key='-txt_drug_name-', size=10),
+                sg.Text('Dosagemn:', size=25),
                 sg.Text('', key='-txt_dosagem-'), 
                 sg.Text('', key='-txt_dosagem_unit-'),
             ],
             [
-                sg.Text('Expiracao:'),
-                sg.Text(key="-txt_DATE-", visible=True),
-                sg.Text('Numero pexca dentro 1 caixa:'),
+                sg.Text('Expiracao:', size=10),
+                sg.Text(key="-txt_DATE-", visible=True, size=10),
+                sg.Text('Numero pexca dentro 1 caixa:', size=25),
                 sg.Text(0, key='-txt_pieces_in_box-'),
             ],
             [
-                sg.Text('Forma:'),
-                sg.Text('', key='-txt_forma-'),
-                sg.Text('Lote:'),
+                sg.Text('Forma:', size=10),
+                sg.Text('', key='-txt_forma-',size=10),
+                sg.Text('Lote:', size=25),
                 sg.Text('', key='-txt_lote-'),
             ],
             [
@@ -104,11 +104,11 @@ def get_new_movement_layout():
             ],
             [
                 sg.Text('Numero de pecas fora de caixina'),
-                sg.Input(0, key='-pieces_moved'),
+                sg.Input(0, key='-pieces_moved-'),
             ],
             [
                 sg.Text('Entrada/Saida/Inventario'),
-                sg.Combo(['Entrada','Saida','Inventario'], key='-comb_type_mov', readonly=True)
+                sg.Combo(['Entrada','Saida','Inventario'], key='-comb_type_mov-', readonly=True)
             ],
             [
                 sg.Text('Assignatura'),
@@ -116,14 +116,14 @@ def get_new_movement_layout():
             ],
             [
                 sg.Button('Guarda', key='-but_save_mov-'),
-                sg.Button('Fecha', key='-but_exit_mov'),
-            ]
+                sg.Button('Fecha', key='-but_exit_mov-'),
+            ],
             [
                 sg.HorizontalSeparator(),
             ],
             [
-                sg.Text('Numero dos pecas movido'),
-                sg.Text(disabled=True, key='-n_peca_movidos-')
+                sg.Text('Numero dos pecas movido:'),
+                sg.Text(key='-tot_pieces_moved-')
             ]
         ]
 

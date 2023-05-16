@@ -72,7 +72,6 @@ def test_fill_drug():
     window.close()
 
 
-
 def pytest_sessionfinish(session, exitstatus):
     # Close the database connection after all tests have finished
     db_connection().close()
