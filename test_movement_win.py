@@ -12,7 +12,7 @@ import time
 
 @pytest.fixture(scope='module')
 def db_connection():
-    path_to_database = 'test.db'
+    path_to_database = 'test_mov.db'
     # Remove the databse is already existing
     if os.path.exists(path_to_database):
         os.remove(path_to_database)
@@ -374,7 +374,7 @@ def test_update_movement(db_connection, drug_id, mov_id):
         db_connection=db_connection,
         drug=drug_dict,
         movement=movement_dict,
-        timeout=10
+        timeout=2,
     )
 
     # TODO fill with updated values

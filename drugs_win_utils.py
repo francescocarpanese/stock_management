@@ -3,6 +3,7 @@ import sqlite3
 import layouts
 import PySimpleGUI as sg
 import drugs_win_utils
+import time
 
 
 def save_drug(window,event,values, connection, id=None):
@@ -50,7 +51,13 @@ def fill_drug(
         window['-in_lote-'].update(value = lote)
 
       
-def drug_session(db_connection, drug=None):
+def drug_session(
+          db_connection,
+          drug=None,
+          test_events=[],
+          test_args=[],
+          timeout=None,
+          ):
     '''
     New drug
     '''
@@ -58,7 +65,7 @@ def drug_session(db_connection, drug=None):
     window = sg.Window('Drug', layout)
     window.finalize()
 
-    id = None
+    drug_id = None
 
     if drug:
         drugs_win_utils.fill_drug(
@@ -71,16 +78,26 @@ def drug_session(db_connection, drug=None):
             type=drug['type'],
             lote=drug['lote']
         )
-        id = drug['id']
+        drug_id = drug['id']
 
+    tstart = time.time()
     while True:
-        event, values = window.read()
+        event, values = window.read(timeout=100)
         if event == sg.WIN_CLOSED:
             break
-        elif event=='-but_save_new_drug':
-            drugs_win_utils.save_drug(window,event,values,db_connection, id=id)
+        elif event=='-but_save_new_drug-':
+            drugs_win_utils.save_drug(window,event,values,db_connection, id=drug_id)
             break
-        elif event=='-but-exit_new_drug':
+        elif event=='-but-exit_new_drug-':
             break
+
+        # Timeout for the the window used for testing purposes
+        if timeout:
+            if time.time()-tstart > timeout:
+                break
+
+        # Running automatic events for test purposes
+        for ev, arg in zip(test_events, test_args):
+            ev(window,event,values,drug_id,arg)
 
     window.close()

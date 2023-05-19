@@ -12,3 +12,5 @@ dist/
 
 # Ingore compilation files python
 *.pyc
+
+*.db

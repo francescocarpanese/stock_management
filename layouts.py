@@ -31,8 +31,8 @@ def get_new_drug_layout():
             sg.Input('', key='-in_lote-')
         ],
         [
-            sg.Button('Guarda',key='-but_save_new_drug'),
-            sg.Button('Fecha',key='-but-exit_new_drug'),
+            sg.Button('Guarda',key='-but_save_new_drug-'),
+            sg.Button('Fecha',key='-but-exit_new_drug-'),
 
         ],
     ]

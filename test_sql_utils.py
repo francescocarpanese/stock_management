@@ -7,7 +7,7 @@ from datetime import datetime, date
 
 @pytest.fixture(scope='module')
 def db_connection():
-    path_to_database = 'test.db'
+    path_to_database = 'test_sql.db'
     # Remove the databse is already existing
     if os.path.exists(path_to_database):
         os.remove(path_to_database)
@@ -17,7 +17,9 @@ def db_connection():
 
     conn =  sqlite3.connect(path_to_database)
     yield conn
+
     conn.close()
+
 
 def test_add_drug(db_connection):
     sql_utils.add_drug(
