@@ -24,6 +24,21 @@ def db_connection():
 
     conn.close()
 
+@pytest.fixture(scope='function')
+def drug_id(db_connection):
+    sql_utils.add_drug(
+        conn=db_connection,
+        name='test_mov',
+        dose='1',
+        units='l',
+        expiration=date(2023,1,1),
+        pieces_per_box=1,
+        drug_type='comprimidos',
+        lote='a123',
+              )
+    drug_id = sql_utils.get_last_row_id(db_connection, 'drugs')
+
+    yield drug_id
 
 @pytest.fixture(scope='function')
 def one_drug():
@@ -66,6 +81,19 @@ def test_fill_new_drug(db_connection, one_drug):
     one_drug['stock'] = 0
     
     assert drug_dict == one_drug   
+
+def test_update_drug_value(db_connection, drug_id, one_drug):
+    # Fetch the drug from the database
+    drug = sql_utils.get_row(db_connection, 'drugs', drug_id)
+    drug_dict = sql_utils.parse_drug(db_connection, 'drugs', drug)
+
+    # Update the drug
+    drug_dict['name'] = 'test2'
+    pass
+    # Fill the drug window
+    # Save from the drug window
+    # Fetch the drug again
+    # Check that the drug was updated
 
 
 # ------  Events -------

@@ -7,13 +7,7 @@ import movement_win_utils
 import drugs_win_utils
 from datetime import datetime
 
-def is_positive_integer(s):
-    try:
-        num = int(s)
-        return num >= 0
-    except ValueError:
-        return False
-
+from common_utils import is_positive_null_integer
 
 def update_stock(
         db_connection,
@@ -64,9 +58,9 @@ def check_entries(window, values):
         error_msg += '\nInserir data'
     if values['-comb_type_mov-'] == '':
         error_msg += '\nInserir Entrada/Saida/Inventario'
-    if not is_positive_integer(values['-boxes_moved-']):
+    if not is_positive_null_integer(values['-boxes_moved-']):
         error_msg += f'\nNumero de caixinha tem que ser un numero >=0'
-    if not is_positive_integer(values['-pieces_moved-']):
+    if not is_positive_null_integer(values['-pieces_moved-']):
         error_msg += f'\nNumero de pecas tem que ser un numero >=0'
     
     if error_msg != '':

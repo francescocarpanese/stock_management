@@ -4,9 +4,11 @@ import layouts
 import PySimpleGUI as sg
 import drugs_win_utils
 import time
-
+from common_utils import is_positive_integer
 
 def save_drug(window,event,values, connection, id=None):
+        if not check_entries(window, values):
+            return False
         if id:
             sql_utils.update_drug(
                 conn=connection,
@@ -31,6 +33,8 @@ def save_drug(window,event,values, connection, id=None):
                 lote=values['-in_lote-'],
             )
 
+        return True
+
 def fill_drug(
                 window,
                 drug_name = '',
@@ -49,6 +53,20 @@ def fill_drug(
         window['-in_pieces_in_box-'].update(value = pieces_per_box)
         window['-combo_forma-'].update(value = type)
         window['-in_lote-'].update(value = lote)
+
+
+def check_entries(window, values):
+    error_msg = ''
+    if values['-in_drug_name-'] == '':
+        error_msg += '\nInserir nome do medicamento'    
+    if values['-in_DATE-'] == '':
+        error_msg += '\nInserir data expiracao'
+    if not is_positive_integer(values['-in_pieces_in_box-']):
+        error_msg += f'\nNumero de pecas dentro uma caiza tem que ser un numero >0'
+    if error_msg != '':
+        sg.popup(error_msg)
+        return False
+    return True
 
       
 def drug_session(
@@ -86,8 +104,8 @@ def drug_session(
         if event == sg.WIN_CLOSED:
             break
         elif event=='-but_save_new_drug-':
-            drugs_win_utils.save_drug(window,event,values,db_connection, id=drug_id)
-            break
+            if drugs_win_utils.save_drug(window,event,values,db_connection, id=drug_id):
+                break
         elif event=='-but-exit_new_drug-':
             break
 
