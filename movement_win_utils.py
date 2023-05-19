@@ -5,17 +5,89 @@ import PySimpleGUI as sg
 import time
 import movement_win_utils
 import drugs_win_utils
+from datetime import datetime
+
+def is_positive_integer(s):
+    try:
+        num = int(s)
+        return num >= 0
+    except ValueError:
+        return False
+
+
+def update_stock(
+        db_connection,
+        pieces_moved,
+        date_movement,
+        movement_type,
+        drug_id,
+    ):
+    print('Updating stock')
+    # This should be moved directly to the SQL events instead
+
+    drug = sql_utils.get_row(db_connection, 'drugs', drug_id)
+    drug_dict = sql_utils.parse_drug(db_connection, 'drugs', drug)
+
+    # Parse to datetime
+    date_movement = datetime.strptime(date_movement, '%Y-%m-%d').date()
+    
+    # The inventory has the highest priority for updating the stock on a given date
+    if date_movement > drug_dict['last_inventory_date']:
+        if movement_type == 'inventory':
+            drug_dict['stock'] = pieces_moved
+            drug_dict['last_inventory_date'] = date_movement
+        elif movement_type == 'entry':
+            drug_dict['stock'] = drug_dict['stock'] + pieces_moved
+        elif movement_type == 'exit':
+            drug_dict['stock'] = drug_dict['stock'] - pieces_moved
+
+        drug_dict['stock'] = max(0.,drug_dict['stock'])
+        print(drug_dict['stock'])
+        sql_utils.update_drug(
+            conn=db_connection,
+            drug_id=drug_id,
+            name=drug_dict['name'],
+            dose=drug_dict['dose'],
+            units=drug_dict['units'],
+            expiration=drug_dict['expiration'],
+            pieces_per_box=drug_dict['pieces_per_box'],
+            drug_type=drug_dict['type'],
+            lote=drug_dict['lote'],
+            stock=drug_dict['stock'],
+            last_inventory_date=drug_dict['last_inventory_date'],
+        )
+
+
+def check_entries(window, values):
+    error_msg = ''
+    if values['-in_data_movido-'] == '':
+        error_msg += '\nInserir data'
+    if values['-comb_type_mov-'] == '':
+        error_msg += '\nInserir Entrada/Saida/Inventario'
+    if not is_positive_integer(values['-boxes_moved-']):
+        error_msg += f'\nNumero de caixinha tem que ser un numero >=0'
+    if not is_positive_integer(values['-pieces_moved-']):
+        error_msg += f'\nNumero de pecas tem que ser un numero >=0'
+    
+    if error_msg != '':
+        sg.popup(error_msg)
+        return False
+    return True
+
 
 def save_move(window,event,values, connection, drug, movement_id):
-        # Add a check for the different entries types
+        
+        if not check_entries(window, values):
+            return False
+
         if values['-comb_type_mov-'] == 'Entrada':
             mov_type = 'entry'
         elif values['-comb_type_mov-'] == 'Saida':
             mov_type = 'exit'
-        elif values['-comb_type_mov-'] == 'Saida':
-             mov_type = 'inventory'
+        elif values['-comb_type_mov-'] == 'Inventario':
+            mov_type = 'inventory'
 
-        pieces_moved = int(values['-pieces_moved-']) + int(values['-boxes_moved-'])*drug['pieces_per_box']
+        pieces_moved = get_tot_pieces_moved_casted(window, values, drug)
 
         if movement_id:
             sql_utils.update_movement(
@@ -38,8 +110,16 @@ def save_move(window,event,values, connection, drug, movement_id):
                 drug_id= drug['id'],
             )
 
-        # TODO update the total stock for the drug
-        # TODO add the logic to update the stock depending on the inventory date
+        # Update the stock and stock date in drug table
+        update_stock(
+            connection,
+            pieces_moved,
+            values['-in_data_movido-'],
+            mov_type,
+            drug['id'],
+              )
+
+        return True
 
 def fill_mov(
                 window,
@@ -113,8 +193,24 @@ def fill_win(
         lote=lote,        
     )
 
+def get_tot_pieces_moved_casted(window, values, drug):
+    if values['-pieces_moved-'].isdigit() and int( values['-pieces_moved-'])>0:
+        pieces_moved = int( values['-pieces_moved-'])
+    else:
+        pieces_moved = 0
+    if values['-boxes_moved-'].isdigit() and int( values['-boxes_moved-'])>0:
+        boxes_moved =  int(values['-boxes_moved-'])
+    else:
+        boxes_moved = 0 
 
-def movement_session(db_connection, drug, movement=None, test_events=[], timeout=None):
+    tot_pieces_moved = pieces_moved + boxes_moved*drug['pieces_per_box']
+    return tot_pieces_moved
+
+def update_tot_pieces_moved(window, values, drug):
+    tot_pieces_moved = get_tot_pieces_moved_casted(window, values, drug)
+    window['-tot_pieces_moved-'].update(value=tot_pieces_moved)
+
+def movement_session(db_connection, drug, movement=None, test_events=[], test_args=[], timeout=None):
     '''
     Movement session
     '''
@@ -159,19 +255,21 @@ def movement_session(db_connection, drug, movement=None, test_events=[], timeout
         if event == sg.WIN_CLOSED:
             break
         elif event=='-but_save_mov-':
-            movement_win_utils.save_move(window,event,values,db_connection, drug, mov_id)
-            break
+            if movement_win_utils.save_move(window,event,values,db_connection, drug, mov_id):
+                break
         elif event=='-but_exit_mov-':
             break
         
-        # Implement timeout
+        update_tot_pieces_moved(window,values,drug)
+
+        # Timeout for the the window used for testing purposes
         if timeout:
             if time.time()-tstart > timeout:
                 break
         
         # Running automatic events for test purposes
-        for ev in test_events:
-            ev(window,event,values, mov_id)
+        for ev, arg in zip(test_events, test_args):
+            ev(window,event,values, mov_id, arg)
         
 
     window.close()

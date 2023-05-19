@@ -1,0 +1,14 @@
+# Ignore all files with the .log extension
+*.log
+
+# Ignore the build/ directory
+build/
+
+# Ignore the dist/ directory
+dist/
+
+# Ignore the .vscode/ directory
+.vscode/
+
+# Ingore compilation files python
+*.pyc

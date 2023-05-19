@@ -18,7 +18,7 @@ def create_all_tables(path_to_database):
             type TEXT,
             lote TEXT,
             stock INTEGER DEFAULT 0,
-            last_inventory_date DATE DEFAULT '1990-1-1'
+            last_inventory_date DATE DEFAULT '1990-01-01'
             )
         ''')
 
