@@ -9,6 +9,29 @@ from datetime import datetime
 
 from common_utils import is_positive_null_integer
 
+def compute_new_stock(
+        old_stock,
+        pieces_moved,
+        movement_type, 
+        movement_date,
+        last_inventory_date,
+        last_inventory_stock=0,
+        ):
+    new_stock = old_stock
+    if movement_date > last_inventory_date:
+        if movement_type == 'inventory':
+            last_inventory_date = movement_date
+            new_stock = pieces_moved
+            last_inventory_stock = new_stock
+        elif movement_type == 'entry':
+            new_stock = old_stock + pieces_moved
+        elif movement_type == 'exit':
+            new_stock = old_stock - pieces_moved
+    else:
+        new_stock = old_stock
+    return max(0., new_stock), last_inventory_date, last_inventory_stock
+
+
 def update_stock(
         db_connection,
         pieces_moved,
@@ -24,32 +47,31 @@ def update_stock(
 
     # Parse to datetime
     date_movement = datetime.strptime(date_movement, '%Y-%m-%d').date()
-    
-    # The inventory has the highest priority for updating the stock on a given date
-    if date_movement > drug_dict['last_inventory_date']:
-        if movement_type == 'inventory':
-            drug_dict['stock'] = pieces_moved
-            drug_dict['last_inventory_date'] = date_movement
-        elif movement_type == 'entry':
-            drug_dict['stock'] = drug_dict['stock'] + pieces_moved
-        elif movement_type == 'exit':
-            drug_dict['stock'] = drug_dict['stock'] - pieces_moved
 
-        drug_dict['stock'] = max(0.,drug_dict['stock'])
-        print(drug_dict['stock'])
-        sql_utils.update_drug(
-            conn=db_connection,
-            drug_id=drug_id,
-            name=drug_dict['name'],
-            dose=drug_dict['dose'],
-            units=drug_dict['units'],
-            expiration=drug_dict['expiration'],
-            pieces_per_box=drug_dict['pieces_per_box'],
-            drug_type=drug_dict['type'],
-            lote=drug_dict['lote'],
-            stock=drug_dict['stock'],
-            last_inventory_date=drug_dict['last_inventory_date'],
-        )
+    new_stock, last_inventory_date,last_inventory_stock = compute_new_stock(
+        drug_dict['stock'],
+        pieces_moved,
+        movement_type,
+        date_movement,
+        drug_dict['last_inventory_date'],
+    )
+    drug_dict['stock'] = new_stock
+    drug_dict['last_inventory_date'] = last_inventory_date
+
+    # The inventory has the highest priority for updating the stock on a given date
+    sql_utils.update_drug(
+        conn=db_connection,
+        drug_id=drug_id,
+        name=drug_dict['name'],
+        dose=drug_dict['dose'],
+        units=drug_dict['units'],
+        expiration=drug_dict['expiration'],
+        pieces_per_box=drug_dict['pieces_per_box'],
+        drug_type=drug_dict['type'],
+        lote=drug_dict['lote'],
+        stock=drug_dict['stock'],
+        last_inventory_date=drug_dict['last_inventory_date'],
+    )
 
 
 def check_entries(window, values):
