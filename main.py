@@ -45,6 +45,8 @@ while True:
                 conn,
                 drug=drug_dict,
             )
+    elif event == '-but_report-':
+        movement_win_utils.report_session(conn)
 
     if values['-in_name-'] == '':
         rows = main_win_utils.get_all_drugs(conn, window, event, values)

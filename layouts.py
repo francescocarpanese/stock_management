@@ -128,3 +128,33 @@ def get_new_movement_layout():
         ]
 
     return layout
+
+def get_report_layout():
+    layout = [
+            [
+                sg.CalendarButton("Data do inicio",
+                    target="-in_data_start-",
+                    format="%Y-%m-%d",
+                    default_date_m_d_y=(1, 1, 2023)),
+                    sg.Input(key="-in_data_start-",
+                             visible=True,
+                             disabled=True)
+            ],
+            [
+                sg.CalendarButton("Data do fim",
+                    target="-in_data_end-",
+                    format="%Y-%m-%d",
+                    default_date_m_d_y=(1, 1, 2023)),
+                    sg.Input(key="-in_data_end-",
+                             visible=True,
+                             disabled=True)
+            ],
+            [
+                sg.Button('Generate', key='-but_generate_report-'),
+            ],
+            [
+                sg.Text('Link reports:'),
+                sg.Text('', key='-txt_link_folder-', size=(20,1), enable_events=True),
+            ],
+    ]
+    return layout
