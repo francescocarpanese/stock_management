@@ -5,7 +5,7 @@ import sql_utils
 import main_win_utils
 import drugs_win_utils
 import movement_win_utils
-
+import report_win_utils
 
 path_to_database = 'test.db'
 
@@ -46,7 +46,7 @@ while True:
                 drug=drug_dict,
             )
     elif event == '-but_report-':
-        movement_win_utils.report_session(conn)
+        report_win_utils.report_session(conn)
 
     if values['-in_name-'] == '':
         rows = main_win_utils.get_all_drugs(conn, window, event, values)
