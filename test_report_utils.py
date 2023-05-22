@@ -121,26 +121,33 @@ def test_get_all_df(db_connection, gen_drug_list, gen_movement_list):
     assert df_movements.shape[0] == len(gen_movement_list)
 
 
-
-def test_gen_consumption_report(db_connection):
+def test_compute_consumption_per_ID(db_connection):
     df_movements = sql_utils.get_all_movements_df(db_connection)
-
-    start_date = date(2023,1,1)
-    end_date = date(2023,1,31)
-
-    #agg_functions = {
-    #    'pieces_moved': [
-    #        lambda x: sum(x[x['movement_type'] == 'entry'].pieces_moved),
-    #        lambda x: sum(x[x['movement_type'] == 'exit'].pieces_moved),
-    #    ],
-    #}
-
-
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
     comulative_result = reports_utils.add_cum_stock_df(df_movements)
+    consumption_df = reports_utils.compute_consumption_agg_drug_ID(df_drugs, comulative_result, date(2023,1,1), date(2023,1,31))
 
-    print(df_movements)
+    # TODO add test for the results
+    pass
 
-    return
+def test_save_txt_consumption_per_ID(db_connection):
+    df_movements = sql_utils.get_all_movements_df(db_connection)
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
+    comulative_result = reports_utils.add_cum_stock_df(df_movements)
+    consumption_df = reports_utils.compute_consumption_agg_drug_ID(df_drugs, comulative_result, date(2023,1,1), date(2023,1,31))
+
+    file_out = 'test_consumption_per_ID.txt'
+    mask = consumption_df['stock'] > 0 
+    reports_utils.save_txt_agg_per_ID(
+        df_drugs,
+        consumption_df,
+        mask=mask,
+        file_name=file_out,
+        col_mask_mov=['exit', 'entry', 'stock', 'last_inventory_date'],
+        )
+    
+    # TODO add test for the results
+    pass
 
 
 def test_gen_mov_report_per_ID(db_connection):
@@ -148,8 +155,6 @@ def test_gen_mov_report_per_ID(db_connection):
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
     comulative_result = reports_utils.add_cum_stock_df(df_movements)
     reports_utils.save_txt_mov_per_ID(df_drugs, comulative_result)
-
-
 
 def pytest_sessionfinish(session, exitstatus):
     # Close the database connection after all tests have finished

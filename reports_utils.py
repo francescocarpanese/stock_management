@@ -75,19 +75,93 @@ def save_txt_mov_per_ID(df_drug, df_mov, file_name='mov_per_ID.txt'):
         for index, row in df_drug.iterrows():
            df_mov_drug = df_mov[df_mov['drug_id'] == index]
            df_mov_drug.sort_values(by=['date_movement'], inplace=True)
-
            row_df = pd.DataFrame([row], columns=df_drug.columns)
            table_row = tabulate(row_df, headers='keys', tablefmt='simple')
            f.write(table_row)
-
            f.write('\n')
-
            table_mov = tabulate(df_mov_drug, headers='keys', tablefmt='psql')
            f.write(table_mov)
-           
            f.write('\n\n')
 
+def save_txt_agg_per_ID(
+        df_drug,
+        df_mov,
+        mask=None,
+        file_name='consumption_per_ID.txt',
+        col_mask_drug = None,
+        col_mask_mov = None,
+        ):
+    
+    # df_mov needs to have already the cumulative stock added
+    df_drug.sort_values(by=['name'], inplace=True)
 
-def comput_out_stock_movement(df_movement):
-    pass
+    # Applying masks
+    if mask is not None:
+        df_mov = df_mov[mask]
+    
+    # Display all columns if no mask is provided
+    if col_mask_drug is None:
+        col_mask_drug = df_drug.columns
 
+    if col_mask_mov is None:
+        col_mask_mov = df_mov.columns
+
+    # Compose the output path
+    out_path = os.path.join(BASE_DIR, file_name)
+
+    with open(out_path, 'w') as f:
+        for index, row in df_drug.iterrows():
+            # Extrac the movements for each drug_id
+            df_consumption_drug_id = df_mov[df_mov['drug_id'] == index]
+            row_df = pd.DataFrame([row], columns=df_drug.columns)
+            table_row = tabulate(row_df[col_mask_drug], headers='keys', tablefmt='simple', showindex=False)
+            f.write(table_row)
+            f.write('\n')
+            table_mov = tabulate(df_consumption_drug_id[col_mask_mov], headers='keys', tablefmt='psql', showindex=False)
+            f.write(table_mov)
+            f.write('\n\n')
+
+
+def compute_consumption_agg_drug_ID(
+        df_drug,
+        df_mov,
+        start_date = date(1900,1,1),
+        end_date = date(2100,1,1),
+        ):
+    
+    # The df_mov needs to have already the cumulative stock added
+
+    df_drug.sort_values(by=['name'], inplace=True)
+    df_drug = df_drug[df_drug['stock'] > 0]
+
+    df_mov =df_mov[(df_mov['date_movement'] >= start_date) & (df_mov['date_movement'] <= end_date)]
+    
+    # Extract entry and exit
+    df_mov['entry'] = df_mov.apply(lambda x: x['pieces_moved'] if x['movement_type'] == 'entry' else 0, axis=1)
+    df_mov['exit'] = df_mov.apply(lambda x: x['pieces_moved'] if x['movement_type'] == 'exit' else 0, axis=1)
+
+    # Compute total entry for groupby drug_id
+    df_mov_entry = df_mov.groupby('drug_id')['entry'].sum().reset_index()
+    
+    # Compute total exit for groupby drug_id
+    df_mov_exit = df_mov.groupby('drug_id')['exit'].sum().reset_index()
+
+    # Merge entry and exit
+    df_mov_agg = pd.merge(df_mov_entry, df_mov_exit, on='drug_id', how='outer')
+
+    # Extract the latest available stock for each drug_id
+    df_mov_stock = df_mov.groupby('drug_id')['stock_after_movement'].last().reset_index()
+
+    # Rename column stock_after_movement to stock
+    df_mov_stock.rename(columns={'stock_after_movement': 'stock'}, inplace=True)
+
+    # Extract the date of latest available stock for each drug_id
+    df_mov_date = df_mov.groupby('drug_id')['last_inventory_date'].last().reset_index()
+
+    # Merge the latest available stock and date
+    df_mov_stock_date = pd.merge(df_mov_stock, df_mov_date, on='drug_id', how='outer')
+
+    # Merge the aggregated entry and exit with the latest available stock and date
+    df_out = pd.merge(df_mov_agg, df_mov_stock_date, on='drug_id', how='outer')
+
+    return df_out
