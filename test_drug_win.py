@@ -78,7 +78,7 @@ def test_fill_new_drug(db_connection, one_drug):
 
     # Add default values
     one_drug['last_inventory_date'] = date(1990, 1,1)
-    one_drug['stock'] = 0
+    one_drug['current_stock'] = 0
     
     assert drug_dict == one_drug   
 

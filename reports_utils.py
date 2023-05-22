@@ -4,7 +4,7 @@ from datetime import date
 import os
 from tabulate import tabulate
 import pandas as pd
-
+import reports_utils
 
 BASE_DIR = 'reports'
 
@@ -40,7 +40,6 @@ def add_cum_stock_group(df):
         
     return df
 
-
 def add_cum_stock_df(df):
     # Group the DataFrame by a specific column(s)
     grouped_df = df.groupby('drug_id')
@@ -61,11 +60,6 @@ def add_cum_stock_df(df):
         df.loc[index, 'last_inventory_stock'] = group_df.loc[index,'last_inventory_stock']
 
     return df
-
-
-def extract_date(df, start_date, end_date):
-    return df[(df['date_movement'] >= start_date) & (df['date_movement'] <= end_date)]
-    
 
 def save_txt_mov_per_ID(df_drug, df_mov, file_name='mov_per_ID.txt'):
     # This has to be fildered by date already
@@ -121,7 +115,6 @@ def save_txt_agg_per_ID(
             f.write(table_mov)
             f.write('\n\n')
 
-
 def compute_consumption_agg_drug_ID(
         df_drug,
         df_mov,
@@ -132,7 +125,7 @@ def compute_consumption_agg_drug_ID(
     # The df_mov needs to have already the cumulative stock added
 
     df_drug.sort_values(by=['name'], inplace=True)
-    df_drug = df_drug[df_drug['stock'] > 0]
+    df_drug = df_drug[df_drug['current_stock'] > 0]
 
     df_mov =df_mov[(df_mov['date_movement'] >= start_date) & (df_mov['date_movement'] <= end_date)]
     

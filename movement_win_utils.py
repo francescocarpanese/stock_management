@@ -39,7 +39,6 @@ def update_stock(
         movement_type,
         drug_id,
     ):
-    print('Updating stock')
     # This should be moved directly to the SQL events instead
 
     drug = sql_utils.get_row(db_connection, 'drugs', drug_id)
@@ -49,13 +48,13 @@ def update_stock(
     date_movement = datetime.strptime(date_movement, '%Y-%m-%d').date()
 
     new_stock, last_inventory_date,last_inventory_stock = compute_new_stock(
-        drug_dict['stock'],
+        drug_dict['current_stock'],
         pieces_moved,
         movement_type,
         date_movement,
         drug_dict['last_inventory_date'],
     )
-    drug_dict['stock'] = new_stock
+    drug_dict['current_stock'] = new_stock
     drug_dict['last_inventory_date'] = last_inventory_date
 
     # The inventory has the highest priority for updating the stock on a given date
@@ -69,7 +68,7 @@ def update_stock(
         pieces_per_box=drug_dict['pieces_per_box'],
         drug_type=drug_dict['type'],
         lote=drug_dict['lote'],
-        stock=drug_dict['stock'],
+        stock=drug_dict['current_stock'],
         last_inventory_date=drug_dict['last_inventory_date'],
     )
 

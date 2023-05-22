@@ -4,13 +4,13 @@ import pandas as pd
 
 def add_drug(conn, name, dose, units, expiration, pieces_per_box, drug_type, lote, stock=0):
     c = conn.cursor()
-    c.execute('INSERT INTO drugs (name, dose, units, expiration, pieces_per_box, type, lote, stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (name, dose, units, expiration, pieces_per_box, drug_type, lote, stock))
+    c.execute('INSERT INTO drugs (name, dose, units, expiration, pieces_per_box, type, lote, current_stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', (name, dose, units, expiration, pieces_per_box, drug_type, lote, stock))
     c.close()
     conn.commit()
     
 def update_drug(conn, drug_id, name, dose, units, expiration, pieces_per_box, drug_type, lote, stock=0, last_inventory_date=date(1990,1,1)):
     c = conn.cursor()
-    c.execute('UPDATE drugs SET  name=?, dose=?, units=?, expiration=?, pieces_per_box=?, type=?, lote=?, stock=?, last_inventory_date=? WHERE id=?',
+    c.execute('UPDATE drugs SET  name=?, dose=?, units=?, expiration=?, pieces_per_box=?, type=?, lote=?, current_stock=?, last_inventory_date=? WHERE id=?',
                (name, dose, units, expiration, pieces_per_box, drug_type, lote, stock, last_inventory_date, drug_id))
     c.close()
     conn.commit()

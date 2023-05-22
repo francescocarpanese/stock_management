@@ -45,7 +45,7 @@ def test_update_drug(db_connection):
         'pieces_per_box': 10,
         'type': 'compridos',
         'lote': 'a123',
-        'stock': 0,
+        'current_stock': 0,
         'last_inventory_date': date(2023,1,1)
         }
     modified = {
@@ -56,7 +56,7 @@ def test_update_drug(db_connection):
         'pieces_per_box': 20,
         'type': 'ampulas',
         'lote': 'b123',
-        'stock': 0,
+        'current_stock': 0,
         'last_inventory_date': date(2025,1,2)
         }
 
@@ -69,7 +69,7 @@ def test_update_drug(db_connection):
         pieces_per_box=original['pieces_per_box'],
         drug_type=original['type'],
         lote=original['lote'],
-        stock=original['stock'],
+        stock=original['current_stock'],
             )
     
     id = sql_utils.get_last_row_id(db_connection, table_name)
@@ -83,7 +83,7 @@ def test_update_drug(db_connection):
         pieces_per_box=modified['pieces_per_box'],
         drug_type=modified['type'],
         lote=modified['lote'],
-        stock=modified['stock'],
+        stock=modified['current_stock'],
         last_inventory_date=modified['last_inventory_date'],
             )
  

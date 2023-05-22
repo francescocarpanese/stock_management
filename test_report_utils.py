@@ -113,6 +113,21 @@ def gen_db(db_connection, drug_list, movement_list):
             drug_id=movement[5],
             )
 
+
+@pytest.fixture(scope='function')
+def df_drugs(db_connection):
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
+    return df_drugs
+
+@pytest.fixture(scope='function')
+def df_consumption(db_connection):
+    # Generate consumption full period
+    df_movements = sql_utils.get_all_movements_df(db_connection)
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
+    comulative_result = reports_utils.add_cum_stock_df(df_movements)
+    df_consumption = reports_utils.compute_consumption_agg_drug_ID(df_drugs, comulative_result, date(1990,1,1), date(2100,1,31))
+    return df_consumption
+
 def test_get_all_df(db_connection, gen_drug_list, gen_movement_list):
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
     df_movements = sql_utils.get_all_movements_df(db_connection)
@@ -125,25 +140,19 @@ def test_compute_consumption_per_ID(db_connection):
     df_movements = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
     comulative_result = reports_utils.add_cum_stock_df(df_movements)
-    consumption_df = reports_utils.compute_consumption_agg_drug_ID(df_drugs, comulative_result, date(2023,1,1), date(2023,1,31))
+    df_consumption = reports_utils.compute_consumption_agg_drug_ID(df_drugs, comulative_result, date(2023,1,1), date(2023,1,31))
 
     # TODO add test for the results
     pass
 
-def test_save_txt_consumption_per_ID(db_connection):
-    df_movements = sql_utils.get_all_movements_df(db_connection)
-    df_drugs = sql_utils.get_all_drugs_df(db_connection)
-    comulative_result = reports_utils.add_cum_stock_df(df_movements)
-    consumption_df = reports_utils.compute_consumption_agg_drug_ID(df_drugs, comulative_result, date(2023,1,1), date(2023,1,31))
-
+def test_gen_consumption_per_ID(db_connection, df_drugs, df_consumption):
     file_out = 'test_consumption_per_ID.txt'
-    mask = consumption_df['stock'] > 0 
     reports_utils.save_txt_agg_per_ID(
         df_drugs,
-        consumption_df,
-        mask=mask,
+        df_consumption,
         file_name=file_out,
         col_mask_mov=['exit', 'entry', 'stock', 'last_inventory_date'],
+        col_mask_drug=['name', 'dose', 'units', 'expiration', 'pieces_per_box', 'type', 'lote'],
         )
     
     # TODO add test for the results
@@ -155,6 +164,8 @@ def test_gen_mov_report_per_ID(db_connection):
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
     comulative_result = reports_utils.add_cum_stock_df(df_movements)
     reports_utils.save_txt_mov_per_ID(df_drugs, comulative_result)
+
+
 
 def pytest_sessionfinish(session, exitstatus):
     # Close the database connection after all tests have finished

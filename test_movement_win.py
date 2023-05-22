@@ -91,7 +91,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
 
     drug_dict = sql_utils.parse_drug(db_connection, 'drugs', drug)
 
-    assert drug_dict['stock'] == 0
+    assert drug_dict['current_stock'] == 0
 
     movement_win_utils.movement_session(
         db_connection=db_connection,
@@ -119,7 +119,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
     # Check that the stock has been updated correctly
     drug = sql_utils.get_row(db_connection, 'drugs', drug_id)
     drug_dict = sql_utils.parse_drug(db_connection, 'drugs', drug)
-    assert int(drug_dict['stock']) == args['pieces_moved']
+    assert int(drug_dict['current_stock']) == args['pieces_moved']
 
 
 @pytest.mark.parametrize("multi_mov", 
@@ -131,7 +131,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 20,
             'movement_type': 'entry',
             'signature': 'Francesco_1',
-            'stock': 20,
+            'current_stock': 20,
         },
         {
             'date_movement': date(2025, 1,1),
@@ -139,7 +139,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 10,
             'movement_type': 'exit',
             'signature': 'Francesco_2',
-            'stock': 10,          
+            'current_stock': 10,          
         },
         {
             'date_movement': date(2025, 1,1),
@@ -147,7 +147,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 2,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 8,        
+            'current_stock': 8,        
         },
         {
             'date_movement': date(2025, 1,1),
@@ -155,7 +155,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 1,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 7,        
+            'current_stock': 7,        
         }, 
 ],
 [ # Test with multiple movements, with inventory
@@ -165,7 +165,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 20,
             'movement_type': 'inventory',
             'signature': 'Francesco_1',
-            'stock': 20,
+            'current_stock': 20,
         },
         {
             'date_movement': date(2023, 1,2),
@@ -173,7 +173,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 10,
             'movement_type': 'exit',
             'signature': 'Francesco_2',
-            'stock': 10,          
+            'current_stock': 10,          
         },
         {
             'date_movement': date(2023, 1,2),
@@ -181,7 +181,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 2,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 8,        
+            'current_stock': 8,        
         },
         {
             'date_movement': date(2023, 1,2),
@@ -189,7 +189,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 1,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 7,        
+            'current_stock': 7,        
         }, 
 ],
 [ # Test with multiple movements, with after first entry
@@ -199,7 +199,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 20,
             'movement_type': 'entry',
             'signature': 'Francesco_1',
-            'stock': 20,
+            'current_stock': 20,
         },
         {
             'date_movement': date(2023, 1,2),
@@ -207,7 +207,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 30,
             'movement_type': 'inventory',
             'signature': 'Francesco_2',
-            'stock': 30,          
+            'current_stock': 30,          
         },
         {
             'date_movement': date(2023, 1,3),
@@ -215,7 +215,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 2,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 28,
+            'current_stock': 28,
         },
         {
             'date_movement': date(2023, 1,4),
@@ -223,7 +223,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 1,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 27,        
+            'current_stock': 27,        
         }, 
 ],
 [ # Test that the inventory has the highest priority on the same date
@@ -233,7 +233,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 20,
             'movement_type': 'entry',
             'signature': 'Francesco_1',
-            'stock': 20,
+            'current_stock': 20,
         },
         {
             'date_movement': date(2023, 1,2),
@@ -241,7 +241,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 30,
             'movement_type': 'inventory',
             'signature': 'Francesco_2',
-            'stock': 30,          
+            'current_stock': 30,          
         },
         {
             'date_movement': date(2023, 1,2),
@@ -249,7 +249,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 2,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 30,
+            'current_stock': 30,
         },
         {
             'date_movement': date(2023, 1,4),
@@ -257,7 +257,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 1,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 29,        
+            'current_stock': 29,        
         }, 
 ],
 [ # Test that entries dates before the last inventory are not condidered
@@ -267,7 +267,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 20,
             'movement_type': 'entry',
             'signature': 'Francesco_1',
-            'stock': 20,
+            'current_stock': 20,
         },
         {
             'date_movement': date(2023, 1,2),
@@ -275,7 +275,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 30,
             'movement_type': 'inventory',
             'signature': 'Francesco_2',
-            'stock': 30,          
+            'current_stock': 30,          
         },
         {
             'date_movement': date(2023, 1,2),
@@ -283,7 +283,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 2,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 30,
+            'current_stock': 30,
         },
         {
             'date_movement': date(2023, 1,4),
@@ -291,7 +291,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 1,
             'movement_type': 'exit',
             'signature': 'Francesco_3',
-            'stock': 29,        
+            'current_stock': 29,        
         },
         {
             'date_movement': date(2023, 1,1),
@@ -299,7 +299,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 30,
             'movement_type': 'inventory',
             'signature': 'Francesco_2',
-            'stock': 29,          
+            'current_stock': 29,          
         },
         {
             'date_movement': date(2023, 1,1),
@@ -307,7 +307,7 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
             'pieces_moved': 30,
             'movement_type': 'entry',
             'signature': 'Francesco_2',
-            'stock': 29,          
+            'current_stock': 29,          
         },
 ],
     ]
@@ -321,7 +321,7 @@ def test_multiple_movements(db_connection, drug_id, multi_mov):
 
     drug_dict = sql_utils.parse_drug(db_connection, 'drugs', drug)
 
-    assert drug_dict['stock'] == 0
+    assert drug_dict['current_stock'] == 0
 
     for mov in multi_mov:
         movement_win_utils.movement_session(
@@ -342,13 +342,13 @@ def test_multiple_movements(db_connection, drug_id, multi_mov):
         # Check that the stock has been updated correctly
         drug = sql_utils.get_row(db_connection, 'drugs', drug_id)
         drug_dict = sql_utils.parse_drug(db_connection, 'drugs', drug)
-        assert int(drug_dict['stock']) == mov['stock']
+        assert int(drug_dict['current_stock']) == mov['current_stock']
 
         # Pop extra fields
         movement_dict.pop('entry_datetime')
         movement_dict.pop('drug_id')
         movement_dict.pop('id')
-        mov.pop('stock')
+        mov.pop('current_stock')
 
         # Check that the movement has been correctly inserted into the db
         assert movement_dict == mov
