@@ -10,6 +10,7 @@ def save_drug(window,event,values, connection, id=None):
         if not check_entries(window, values):
             return False
         
+        # Parse the drug name, dose and units
         drug_string_clean = clear_string(values['-in_drug_name-'])
         name_in, dose_in, units_in = parse_dose_units(drug_string_clean)
         dose = values['-in_dosagem-'] if values['-in_dosagem-'] else dose_in

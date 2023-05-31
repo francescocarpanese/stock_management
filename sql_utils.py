@@ -8,10 +8,14 @@ def add_drug(conn, name, dose, units, expiration, pieces_per_box, drug_type, lot
     c.close()
     conn.commit()
     
-def update_drug(conn, drug_id, name, dose, units, expiration, pieces_per_box, drug_type, lote, stock=0, last_inventory_date=date(1990,1,1)):
+def update_drug(conn, drug_id, name, dose, units, expiration, pieces_per_box, drug_type, lote, stock=None, last_inventory_date=None):
     c = conn.cursor()
-    c.execute('UPDATE drugs SET  name=?, dose=?, units=?, expiration=?, pieces_per_box=?, type=?, lote=?, current_stock=?, last_inventory_date=? WHERE id=?',
-               (name, dose, units, expiration, pieces_per_box, drug_type, lote, stock, last_inventory_date, drug_id))
+    c.execute('UPDATE drugs SET  name=?, dose=?, units=?, expiration=?, pieces_per_box=?, type=?, lote=? WHERE id=?',
+               (name, dose, units, expiration, pieces_per_box, drug_type, lote, drug_id))
+    if  stock != None:
+        c.execute('UPDATE drugs SET  current_stock=? WHERE id=?', (stock, drug_id))
+    if last_inventory_date != None:
+        c.execute('UPDATE drugs SET  last_inventory_date=? WHERE id=?', (last_inventory_date, drug_id))
     c.close()
     conn.commit()
 
