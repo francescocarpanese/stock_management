@@ -4,18 +4,24 @@ import layouts
 import PySimpleGUI as sg
 import drugs_win_utils
 import time
-from common_utils import is_positive_integer, clear_string
+from common_utils import is_positive_integer, clear_string, parse_dose_units
 
 def save_drug(window,event,values, connection, id=None):
         if not check_entries(window, values):
             return False
+        
+        drug_string_clean = clear_string(values['-in_drug_name-'])
+        name_in, dose_in, units_in = parse_dose_units(drug_string_clean)
+        dose = values['-in_dosagem-'] if values['-in_dosagem-'] else dose_in
+        units = values['-comb_dosagem-'] if values['-comb_dosagem-'] else units_in
+
         if id:
             sql_utils.update_drug(
                 conn=connection,
                 drug_id=id,
-                name=clear_string(values['-in_drug_name-']),
-                dose=values['-in_dosagem-'],
-                units=values['-comb_dosagem-'],
+                name=name_in,
+                dose=dose,
+                units=units,
                 expiration=values['-in_DATE-'],
                 pieces_per_box=values['-in_pieces_in_box-'],
                 drug_type=values['-combo_forma-'],
@@ -24,9 +30,9 @@ def save_drug(window,event,values, connection, id=None):
         else:
             sql_utils.add_drug(
                 conn=connection,
-                name=clear_string(values['-in_drug_name-']),
-                dose=values['-in_dosagem-'],
-                units=values['-comb_dosagem-'],
+                name=name_in,
+                dose=dose,
+                units=units,
                 expiration=values['-in_DATE-'],
                 pieces_per_box=values['-in_pieces_in_box-'],
                 drug_type=values['-combo_forma-'],

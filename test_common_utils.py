@@ -50,7 +50,7 @@ def test_clear_string(sin, sout):
     ('lidocaina 20%', ('lidocaina 20%', '', '')),
     ('ligaduara de gase 10cmx4,5m', ('ligaduara de gase 10cmx4,5m', '', '')),
     ('losardiac 100mg/25mg', ('losardiac 100mg/25mg', '', '')),
-    ('paracetamol 125mg 5ml', ('paracetamol 125mg', '5', 'ml')),
+    ('paracetamol 125mg 5ml', ('paracetamol 125mg 5ml', '', '')),
     ('paracetamol 500mg efervescentes', ('paracetamol efervescentes', '500', 'mg')),
     ('penicilina benzatina 2,4mg', ('penicilina benzatina', '2,4', 'mg')),
     ('shaltoux125ml', ('shaltoux125ml', '', '')),

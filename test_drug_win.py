@@ -9,20 +9,22 @@ import os
 from datetime import date
 import time
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def db_connection():
     path_to_database = 'test_drug.db'
-    # Remove the databse is already existing
-    if os.path.exists(path_to_database):
-        os.remove(path_to_database)
 
-    # Fresh create the tables
-    create_all_tables(path_to_database)
+    if not os.path.exists(path_to_database):
+       # Fresh create the tables
+       create_all_tables(path_to_database)
 
     conn =  sqlite3.connect(path_to_database)
     yield conn
 
     conn.close()
+
+    # Remove the databse is already existing
+    if os.path.exists(path_to_database):
+        os.remove(path_to_database)
 
 @pytest.fixture(scope='function')
 def drug_id(db_connection):
@@ -52,8 +54,26 @@ def one_drug():
             'lote': 'kk23',
     }
 
-
-def test_fill_new_drug(db_connection, one_drug):
+# Check the logic for parsing dose and units
+@pytest.mark.parametrize("in_drug, expected_drug", [
+    (
+    dict(name='test1', dose='500', units='ml', expiration=date(2025, 1,1), pieces_per_box=1, type='comprimidos', lote='kk23'),
+    dict(name='test 1', dose='500', units='ml', expiration=date(2025, 1,1), pieces_per_box=1, type='comprimidos', lote='kk23', last_inventory_date=date(1990, 1,1), current_stock=0),
+    ),
+    (
+    dict(name='test 100ml', dose='', units='', expiration=date(2025, 1,1), pieces_per_box=1, type='comprimidos', lote='kk23'),
+    dict(name='test', dose='100', units='ml', expiration=date(2025, 1,1), pieces_per_box=1, type='comprimidos', lote='kk23', last_inventory_date=date(1990, 1,1), current_stock=0),
+    ),
+    (
+    dict(name='test 100ml', dose='500', units='', expiration=date(2025, 1,1), pieces_per_box=1, type='comprimidos', lote='kk23'),
+    dict(name='test', dose='500', units='ml', expiration=date(2025, 1,1), pieces_per_box=1, type='comprimidos', lote='kk23', last_inventory_date=date(1990, 1,1), current_stock=0),
+    ),
+    (
+    dict(name='test 100ml', dose='500', units='cl', expiration=date(2025, 1,1), pieces_per_box=1, type='comprimidos', lote='kk23'),
+    dict(name='test', dose='500', units='cl', expiration=date(2025, 1,1), pieces_per_box=1, type='comprimidos', lote='kk23', last_inventory_date=date(1990, 1,1), current_stock=0),
+    ),
+])
+def test_fill_new_drug(db_connection, in_drug, expected_drug):
    
     drugs_win_utils.drug_session(
         db_connection=db_connection,
@@ -62,7 +82,7 @@ def test_fill_new_drug(db_connection, one_drug):
             event_save_drug
         ],
         test_args=[
-            one_drug,
+            in_drug,
             [],
         ],
         timeout=10
@@ -75,12 +95,8 @@ def test_fill_new_drug(db_connection, one_drug):
     
     # Remove extra fields
     drug_dict.pop('id')
-
-    # Add default values
-    one_drug['last_inventory_date'] = date(1990, 1,1)
-    one_drug['current_stock'] = 0
     
-    assert drug_dict == one_drug   
+    assert drug_dict == expected_drug   
 
 def test_update_drug_value(db_connection, drug_id, one_drug):
     # Fetch the drug from the database
