@@ -4,7 +4,7 @@ import layouts
 import PySimpleGUI as sg
 import drugs_win_utils
 import time
-from common_utils import is_positive_integer
+from common_utils import is_positive_integer, clear_string
 
 def save_drug(window,event,values, connection, id=None):
         if not check_entries(window, values):
@@ -13,7 +13,7 @@ def save_drug(window,event,values, connection, id=None):
             sql_utils.update_drug(
                 conn=connection,
                 drug_id=id,
-                name=values['-in_drug_name-'],
+                name=clear_string(values['-in_drug_name-']),
                 dose=values['-in_dosagem-'],
                 units=values['-comb_dosagem-'],
                 expiration=values['-in_DATE-'],
@@ -24,7 +24,7 @@ def save_drug(window,event,values, connection, id=None):
         else:
             sql_utils.add_drug(
                 conn=connection,
-                name=values['-in_drug_name-'],
+                name=clear_string(values['-in_drug_name-']),
                 dose=values['-in_dosagem-'],
                 units=values['-comb_dosagem-'],
                 expiration=values['-in_DATE-'],

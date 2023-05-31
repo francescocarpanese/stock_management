@@ -199,6 +199,9 @@ def clear_string(s):
     # replace 'oux' with 'oux '
     s = re.sub(r'oux', r'oux ', s)
 
+    # Remove all special characters, but allow ','
+    s = re.sub(r'[^a-zA-Z0-9,]', r' ', s)
+
     # replace 'teste' with 'test'
     s = re.sub(r'teste', r'test', s)
 

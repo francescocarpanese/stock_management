@@ -43,6 +43,9 @@ def get_main_layout():
         [
             sg.Text('Nome'),
             sg.Input('',key='-in_name-', enable_events=True),
+            sg.Checkbox('Expirado',  default=True, key='-chx_expired-', enable_events=True),
+            sg.Checkbox('Esgotados', default=False, key='-chx_out_stock-', enable_events=True),
+            sg.Checkbox('Presente',  default=True, key='-chx_present-', enable_events=True),
         ],
         [
             sg.Table(

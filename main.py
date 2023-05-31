@@ -7,7 +7,7 @@ import drugs_win_utils
 import movement_win_utils
 import report_win_utils
 
-path_to_database = 'test.db'
+path_to_database = 'test_mov.db'
 
 layout = get_main_layout()
 
@@ -24,7 +24,7 @@ while True:
     event, values = window.read()
     if event == sg.WIN_CLOSED:
         break
-    elif event == '-in_name-':
+    elif event == '-in_name-' or event== '-chx_expired-' or event == '-chx_out_stock-' or event == '-chx_present-':
         rows = main_win_utils.search_drug(conn, window, event, values)
         main_win_utils.display_table(window, rows)
     elif event == '-but_new_drug-':
@@ -49,7 +49,7 @@ while True:
         report_win_utils.report_session(conn)
 
     if values['-in_name-'] == '':
-        rows = main_win_utils.get_all_drugs(conn, window, event, values)
+        rows = main_win_utils.search_drug(conn, window, event, values)
         main_win_utils.display_table(window, rows)
         
         
