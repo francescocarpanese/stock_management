@@ -1,4 +1,5 @@
 import sqlite3
+import sql_utils
 
 def query_name_str(search_text):
     return f"name LIKE '{search_text}%'"
@@ -72,3 +73,11 @@ def get_all_drugs(conn, window = None, event=None, values=None):
 def display_table(window, rows=[]):
     table_viz = [row[1:] for row in rows]
     window['-list_table-'].update(values=table_viz) 
+
+def diplay_last_drug(conn, window):
+    drug_id = sql_utils.get_last_row_id(conn, 'drugs')
+    drug = sql_utils.get_row(conn, 'drugs', drug_id)
+    drug_dict = sql_utils.parse_drug(conn, 'drugs', drug)
+    window['-in_name-'].update(value=drug_dict['name'])
+    window['-chx_out_stock-'].update(value=True)
+    window.write_event_value('-in_name-', drug_dict['name'])

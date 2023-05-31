@@ -29,6 +29,7 @@ while True:
         main_win_utils.display_table(window, rows)
     elif event == '-but_new_drug-':
         drugs_win_utils.drug_session(conn)
+        main_win_utils.diplay_last_drug(conn, window)
     elif event == '-but_correct_drug':
         # TODO move to function
         if len(values['-list_table-']) > 0:
