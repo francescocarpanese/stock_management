@@ -11,7 +11,9 @@ def get_new_drug_layout():
         [
             sg.Text('Dosagemn'),
             sg.Input('', key='-in_dosagem-'), 
-            sg.Combo([''], key='-comb_dosagem-'),
+            sg.Combo(['','l','dl','cl','ml','g','mg'],
+                     key='-comb_dosagem-',
+                     default_value=''),
         ],
         [
             sg.Text('Expiracao'),

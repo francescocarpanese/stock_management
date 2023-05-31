@@ -13,7 +13,40 @@ def is_positive_integer(s):
         return num > 0
     except ValueError:
         return False
+
+def parse_dose_units(s):
+    name = s
+    dose = ''
+    units = ''
+
+    # Check is type <name><space><number><units>
+    pattern = r'\b(.+)\s(\d{1,4})([a-zA-Z]{1,4})(?=\s|$)\b'
     
+    # Find how many time <number up to 4 digirs><word up to 4 letters> appears in the string
+    pattern_doseunits = r'\b(\d{1,4})([a-zA-Z]{1,2})\b'
+
+    match = re.match(pattern, s)
+    if match and len(re.findall(pattern_doseunits, s))==1:
+        dose = match.group(2)
+        units = match.group(3)
+        name = s.replace(dose+units, '')
+        name = re.sub(r'\s+', ' ', name)
+        name = name.strip()
+
+    # Check is type <name><space><number>,<number><units>
+    pattern = r'\b(.+)\s(\d{1,4},\d{1,4})([a-zA-Z]{1,4})(?=\s|$)\b'
+    match = re.match(pattern, s)
+    if match and len(re.findall(pattern_doseunits, s))==1:
+        dose = match.group(2)
+        units = match.group(3)
+        name = s.replace(dose+units, '')
+        name = re.sub(r'\s+', ' ', name)
+        name = name.strip()
+    
+    
+    return name, dose, units
+
+
 
 def clear_string(s):
     # Trim the string
@@ -199,15 +232,14 @@ def clear_string(s):
     # replace 'oux' with 'oux '
     s = re.sub(r'oux', r'oux ', s)
 
-    # Remove all special characters, but allow ','
-    s = re.sub(r'[^a-zA-Z0-9,]', r' ', s)
+    # replace '.' with ',' between two digits
+    s = re.sub(r'(\d)\.(\d)', r'\1,\2', s)
+
+    # Remove all special characters, but allow ',','+','/','%'
+    s = re.sub(r'[^a-zA-Z0-9,+/%]', r' ', s)
 
     # replace 'teste' with 'test'
     s = re.sub(r'teste', r'test', s)
-
-    # if there is a + followed by space or preceded by space, remove the spaces
-    s = re.sub(r'\+ ', r'+', s)
-    s = re.sub(r' \+', r'+', s)
 
     # if there is a space, followed by 'n' followed by space, remove the 'n'
     s = re.sub(r' n ', r' ', s)
