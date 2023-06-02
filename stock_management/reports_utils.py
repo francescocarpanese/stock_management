@@ -7,6 +7,9 @@ import pandas as pd
 import stock_management.reports_utils as reports_utils
 
 BASE_DIR = 'reports'
+# Create report directory if not existing
+if not os.path.exists(BASE_DIR):
+    os.makedirs(BASE_DIR)
 
 def add_cum_stock_group(df):
     df.sort_values(by=['date_movement'], inplace=True)
@@ -85,6 +88,7 @@ def save_txt_agg_per_ID(
         col_mask_mov = None,
         ):
     
+
     # df_mov needs to have already the cumulative stock added
     df_drug.sort_values(by=['name'], inplace=True)
 
