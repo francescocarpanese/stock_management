@@ -1,4 +1,4 @@
-import sql_utils
+import stock_management.sql_utils as sql_utils
 import sqlite3
 import stock_management.layouts as layouts
 import PySimpleGUI as sg

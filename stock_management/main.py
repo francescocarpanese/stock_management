@@ -1,7 +1,7 @@
 import PySimpleGUI as sg
 from stock_management.layouts import get_main_layout, get_new_drug_layout, get_new_movement_layout
 import sqlite3
-import sql_utils
+import stock_management.sql_utils as sql_utils
 import stock_management.main_win_utils as main_win_utils
 import stock_management.drugs_win_utils as drugs_win_utils
 import stock_management.movement_win_utils as movement_win_utils

@@ -1,4 +1,4 @@
-import sql_utils
+import stock_management.sql_utils as sql_utils
 import pytest
 from stock_management.create_tables import create_all_tables
 import os

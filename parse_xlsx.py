@@ -1,6 +1,6 @@
 import pandas as pd
 from stock_management.create_tables import create_all_tables
-from sql_utils import add_drug, add_movement, get_last_row_id
+from stock_management.sql_utils import add_drug, add_movement, get_last_row_id
 import os
 import sqlite3
 from stock_management.common_utils import clear_string, parse_dose_units

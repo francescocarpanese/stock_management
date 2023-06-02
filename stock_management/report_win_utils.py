@@ -1,4 +1,4 @@
-import sql_utils
+import stock_management.sql_utils as sql_utils
 from  stock_management.layouts import get_report_layout
 import PySimpleGUI as sg
 import time
