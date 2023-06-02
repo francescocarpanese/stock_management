@@ -3,6 +3,7 @@ import PySimpleGUI as sg
 # Set default font in sg elements
 
 
+
 font = ('Arial', 20)
 
 def get_new_drug_layout():
@@ -46,6 +47,7 @@ def get_new_drug_layout():
     return layout
 
 def get_main_layout():
+
     layout = [
         [
             sg.Text('Nome', font=font),
@@ -57,9 +59,13 @@ def get_main_layout():
         [
             sg.Table(
             values = [],
-            headings= ['Nome','Dosagem','Units','Expiracao','Numero de pecas dentro 1 caixinha','Forma','Lote','Stock presente'],
+            headings= ['Nome','Dosagem','Units','Expiracao','Pecas por caixa','Forma','Lote','Stock presente'],
             key='-list_table-',
             font=font,
+            col_widths=[20,8,5,8,12,8,8,10],
+            justification='left',
+            auto_size_columns=False,
+            num_rows=20,
             )
         ],
         [
