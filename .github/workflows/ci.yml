@@ -24,8 +24,8 @@ jobs:
     - name: Install package
       run: pip install .
 
-    - name: Install pytest-xvfb plugin
-      run: pip install pytest-xvfb
+    - name: Install xvfb
+      run: sudo apt-get install xvfb -y
 
-    - name: Run tests
-      run: pytest --xvfb
+    - name: Run tests with xvfb
+      run: xvfb-run pytest
