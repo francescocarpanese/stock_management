@@ -1,4 +1,4 @@
-name: CI
+name: Functional tests
 
 on:
   push:

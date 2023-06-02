@@ -1,0 +1,39 @@
+name: Build EXE
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install package
+        run: pip install .
+
+      - name: Install pyinstaller
+        run: pip install pyinstaller
+
+      - name: Build EXE
+        run: pyinstaller --onefile stock_management/main.py
+
+      - name: Archive EXE
+        run: zip stock_management.zip dist/main
+
+      - name: Create artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: stock_management
+          path: stock_management.zip
