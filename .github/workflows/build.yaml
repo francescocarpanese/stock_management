@@ -30,7 +30,7 @@ jobs:
         run: pyinstaller --onefile stock_management/main.py
 
       - name: Archive EXE
-        run: zip stock_management.zip dist/main
+        run: zip stock_management.zip dist/main.exe
 
       - name: Create artifact
         uses: actions/upload-artifact@v2
