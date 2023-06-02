@@ -1,12 +1,12 @@
 import PySimpleGUI as sg
-from layouts import get_main_layout, get_new_drug_layout, get_new_movement_layout
+from stock_management.layouts import get_main_layout, get_new_drug_layout, get_new_movement_layout
 import sql_utils
 import sqlite3
-import drugs_win_utils
+import stock_management.drugs_win_utils as drugs_win_utils
 import pytest
-from create_tables import create_all_tables
+from stock_management.create_tables import create_all_tables
 import os
-import movement_win_utils
+import stock_management.movement_win_utils as movement_win_utils
 from datetime import date
 import time
 

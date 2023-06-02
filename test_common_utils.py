@@ -1,4 +1,4 @@
-from common_utils import clear_string, parse_dose_units
+from stock_management.common_utils import clear_string, parse_dose_units
 import pytest
 
 @pytest.mark.parametrize("sin, sout", [

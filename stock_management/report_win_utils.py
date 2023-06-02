@@ -1,5 +1,5 @@
 import sql_utils
-from  layouts import get_report_layout
+from  stock_management.layouts import get_report_layout
 import PySimpleGUI as sg
 import time
 from datetime import datetime

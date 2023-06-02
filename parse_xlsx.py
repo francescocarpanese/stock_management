@@ -1,9 +1,9 @@
 import pandas as pd
-from create_tables import create_all_tables
+from stock_management.create_tables import create_all_tables
 from sql_utils import add_drug, add_movement, get_last_row_id
 import os
 import sqlite3
-from common_utils import clear_string, parse_dose_units
+from stock_management.common_utils import clear_string, parse_dose_units
 
 path_to_excel = 'test_data/Maio.xlsx'
 

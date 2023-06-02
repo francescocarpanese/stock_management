@@ -1,5 +1,5 @@
 import PySimpleGUI as sg
-from layouts import get_main_layout, get_new_drug_layout, get_new_movement_layout, get_report_layout
+from stock_management.layouts import get_main_layout, get_new_drug_layout, get_new_movement_layout, get_report_layout
 import sql_utils
 
 layouts = [

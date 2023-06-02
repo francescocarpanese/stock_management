@@ -1,10 +1,10 @@
 import sql_utils
-from movement_win_utils import update_stock, compute_new_stock
+from stock_management.movement_win_utils import update_stock, compute_new_stock
 from datetime import date
 import os
 from tabulate import tabulate
 import pandas as pd
-import reports_utils
+import stock_management.reports_utils as reports_utils
 
 BASE_DIR = 'reports'
 

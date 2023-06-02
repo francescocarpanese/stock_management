@@ -1,11 +1,11 @@
 import sql_utils
 import pytest
-from create_tables import create_all_tables
+from stock_management.create_tables import create_all_tables
 import os
 import sqlite3
 from datetime import date
-from movement_win_utils import update_stock
-import reports_utils
+from stock_management.movement_win_utils import update_stock
+import stock_management.reports_utils as reports_utils
 
 
 @pytest.fixture(scope='module')
