@@ -14,7 +14,7 @@ Invoke-Expression -Command $installRequirementsCmd
 
 # Run pyinstaller with the skimage location
 $pyInstallerCmd = @'
-pyinstaller --onefile ./main.py
+pyinstaller --onefile ./stock_management/main.py
 '@
 
 Invoke-Expression -Command $pyInstallerCmd

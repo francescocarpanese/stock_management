@@ -1,10 +1,10 @@
-import sql_utils
+import stock_management.sql_utils as sql_utils
 import sqlite3
-import layouts
+import stock_management.layouts as layouts
 import PySimpleGUI as sg
-import drugs_win_utils
+import stock_management.drugs_win_utils as drugs_win_utils
 import time
-from common_utils import is_positive_integer, clear_string, parse_dose_units
+from stock_management.common_utils import is_positive_integer, clear_string, parse_dose_units
 
 def save_drug(window,event,values, connection, id=None):
         if not check_entries(window, values):

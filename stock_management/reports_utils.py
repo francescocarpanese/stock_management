@@ -1,12 +1,15 @@
-import sql_utils
-from movement_win_utils import update_stock, compute_new_stock
+import stock_management.sql_utils as sql_utils
+from stock_management.movement_win_utils import update_stock, compute_new_stock
 from datetime import date
 import os
 from tabulate import tabulate
 import pandas as pd
-import reports_utils
+import stock_management.reports_utils as reports_utils
 
 BASE_DIR = 'reports'
+# Create report directory if not existing
+if not os.path.exists(BASE_DIR):
+    os.makedirs(BASE_DIR)
 
 def add_cum_stock_group(df):
     df.sort_values(by=['date_movement'], inplace=True)
@@ -85,6 +88,7 @@ def save_txt_agg_per_ID(
         col_mask_mov = None,
         ):
     
+
     # df_mov needs to have already the cumulative stock added
     df_drug.sort_values(by=['name'], inplace=True)
 

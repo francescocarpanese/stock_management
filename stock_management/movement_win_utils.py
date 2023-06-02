@@ -1,13 +1,13 @@
-import sql_utils
+import stock_management.sql_utils as sql_utils
 import sqlite3
-import layouts
+import stock_management.layouts as layouts
 import PySimpleGUI as sg
 import time
-import movement_win_utils
-import drugs_win_utils
+import stock_management.movement_win_utils as movement_win_utils
+import stock_management.drugs_win_utils as drugs_win_utils
 from datetime import datetime
 
-from common_utils import is_positive_null_integer
+from stock_management.common_utils import is_positive_null_integer
 
 def compute_new_stock(
         old_stock,

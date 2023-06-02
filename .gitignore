@@ -16,3 +16,9 @@ dist/
 *.db
 
 *.spec
+
+*egg-info/*
+
+test_data/*
+
+reports/*

@@ -1,5 +1,5 @@
-import sql_utils
-from create_tables import create_all_tables
+import stock_management.sql_utils as sql_utils
+from stock_management.create_tables import create_all_tables
 import sqlite3
 import pytest
 import os

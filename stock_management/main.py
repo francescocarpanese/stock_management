@@ -1,13 +1,19 @@
 import PySimpleGUI as sg
-from layouts import get_main_layout, get_new_drug_layout, get_new_movement_layout
+from stock_management.layouts import get_main_layout, get_new_drug_layout, get_new_movement_layout
 import sqlite3
-import sql_utils
-import main_win_utils
-import drugs_win_utils
-import movement_win_utils
-import report_win_utils
+import stock_management.sql_utils as sql_utils
+import stock_management.main_win_utils as main_win_utils
+import stock_management.drugs_win_utils as drugs_win_utils
+import stock_management.movement_win_utils as movement_win_utils
+import stock_management.report_win_utils as report_win_utils
+import os
+from stock_management.create_tables import create_all_tables
 
-path_to_database = 'test_mov.db'
+# Create database if not existing
+path_to_database = 'database.db'
+if not os.path.exists(path_to_database):
+    # Fresh create the tables
+    create_all_tables(path_to_database)
 
 layout = get_main_layout()
 
@@ -46,6 +52,7 @@ while True:
                 conn,
                 drug=drug_dict,
             )
+            main_win_utils.display_table(window, rows)
     elif event == '-but_report-':
         report_win_utils.report_session(conn)
 

@@ -1,5 +1,5 @@
 import sqlite3
-import sql_utils
+import stock_management.sql_utils as sql_utils
 
 def query_name_str(search_text):
     return f"name LIKE '{search_text}%'"
