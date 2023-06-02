@@ -1,9 +1,5 @@
 import PySimpleGUI as sg
 
-# Set default font in sg elements
-
-
-
 font = ('Arial', 20)
 
 def get_new_drug_layout():
