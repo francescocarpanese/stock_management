@@ -184,7 +184,7 @@ def create_folders(base_folder_path = BASE_DIR):
 
     # Find the highest existing ID folder
     # Neglet the name of the smear_test
-    id_folders = [f.rsplit("_",1)[0] for f in os.listdir(day_folder) if f.startswith("ID_")]
+    id_folders = [f for f in os.listdir(day_folder) if f.startswith("ID_")]
     if id_folders:
         last_id = max([int(f.split("_")[1]) for f in id_folders])
         new_id = str(last_id + 1).zfill(2)

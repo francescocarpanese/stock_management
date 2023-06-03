@@ -4,10 +4,14 @@ import PySimpleGUI as sg
 import time
 from datetime import datetime
 from stock_management import reports_utils
+import os
 
 
 def save_report(window, values, db_connection):
     folder_base_path = reports_utils.create_folders()
+    window['-txt_link_folder-'].update(folder_base_path,
+                                       text_color='blue',
+                                       visible=True,)
 
 def check_entries(window, values):
     pass
@@ -32,7 +36,11 @@ def report_session(
             break
         elif event == '-but_generate_report-':
             save_report(window, values, db_connection)
-
+        elif event == '-txt_link_folder-':
+            report_folder = window['-txt_link_folder-'].get()
+            if report_folder and os.path.exists(report_folder):
+                os.startfile(report_folder)
+            #subprocess.Popen(r'explorer /select,"{}"'.format(folder_path))
         if timeout:
             if time.time() - tstat > timeout:
                 break
