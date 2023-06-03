@@ -14,7 +14,9 @@ if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
 
 def add_cum_stock_group(df):
+    # For each group, sort by date the different movements before computing the cumulative stock
     df.sort_values(by=['date_movement'], inplace=True)
+
     df['stock_after_movement'] = 0
     df['last_inventory_date'] = date(1900,1,1)
     df['last_inventory_stock'] = 0

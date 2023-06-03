@@ -6,6 +6,7 @@ import sqlite3
 from datetime import date
 from stock_management.movement_win_utils import update_stock
 import stock_management.reports_utils as reports_utils
+import pandas as pd
 
 
 @pytest.fixture(scope='module')
@@ -55,7 +56,7 @@ def gen_movement_list():
         # Expired drug, Entry, Exit, still in stock
         (date(2023,1,1), 'Pharma1', 10, 'entry', 'Francesco', 8),
         (date(2023,1,2), 'dep1', 1, 'exit', 'Francesco', 8),
-        # Entry, exit, inventory, exit still in stock
+        # Entry, exit, exit before the first one still in stock
         (date(2023,1,1), 'Pharma1', 10, 'entry', 'Francesco', 9),
         (date(2023,1,4), 'dep1', 1, 'exit', 'Francesco', 9),
         (date(2023,1,3), 'dep1', 2, 'exit', 'Francesco', 9),
@@ -113,19 +114,24 @@ def gen_db(db_connection, drug_list, movement_list):
             drug_id=movement[5],
             )
 
-
 @pytest.fixture(scope='function')
 def df_drugs(db_connection):
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
     return df_drugs
 
 @pytest.fixture(scope='function')
+def df_movs(db_connection):
+    df_movs = sql_utils.get_all_movements_df(db_connection)
+    return df_movs
+
+
+@pytest.fixture(scope='function')
 def df_consumption_ID(db_connection):
     # Generate consumption full period
     df_movements = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
-    comulative_result = reports_utils.add_cum_stock_df(df_movements)
-    df_consumption_ID = reports_utils.compute_consumption_agg_drug_ID(df_drugs, comulative_result, date(1990,1,1), date(2100,1,31))
+    cumulative_result = reports_utils.add_cum_stock_df(df_movements)
+    df_consumption_ID = reports_utils.compute_consumption_agg_drug_ID(df_drugs, cumulative_result, date(1990,1,1), date(2100,1,31))
     return df_consumption_ID
 
 def test_get_all_df(db_connection, gen_drug_list, gen_movement_list):
@@ -135,15 +141,29 @@ def test_get_all_df(db_connection, gen_drug_list, gen_movement_list):
     assert df_drugs.shape[0] == len(gen_drug_list)
     assert df_movements.shape[0] == len(gen_movement_list)
 
+def test_add_cum_stock_df(df_movs, store_csv=False):
+    path_to_csv = 'test_data/test_cum_stock_agg.csv'
+    cumulative_result = reports_utils.add_cum_stock_df(df_movs)
+    if store_csv:
+        # Store in file for debugging
+        cumulative_result.to_csv(path_to_csv)
+    
+    comulative_result_expected = pd.read_csv(path_to_csv, index_col=0, parse_dates=['date_movement','last_inventory_date','entry_datetime'])
+    
+    # This field is generated with the dataset
+    comulative_result_expected['entry_datetime'] = cumulative_result['entry_datetime']
+    diff = cumulative_result.compare( comulative_result_expected)
+    assert diff.empty
+    
 
 def test_compute_consumption_per_ID(db_connection):
     df_movements = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
-    comulative_result = reports_utils.add_cum_stock_df(df_movements)
-    df_consumption_ID = reports_utils.compute_consumption_agg_drug_ID(df_drugs, comulative_result, date(2023,1,1), date(2023,1,31))
+    cumulative_result = reports_utils.add_cum_stock_df(df_movements)
+    df_consumption_ID = reports_utils.compute_consumption_agg_drug_ID(df_drugs, cumulative_result, date(2023,1,1), date(2023,1,31))
 
-    # TODO add test for the results
     pass
+
 
 def test_gen_consumption_per_ID_txt(db_connection, df_drugs, df_consumption_ID):
     file_name = 'test_consumption_per_ID.txt'
@@ -178,18 +198,16 @@ def test_gen_consumption_per_ID_xlsx(db_connection, df_drugs, df_consumption_ID)
 def test_gen_mov_report_per_ID_txt(db_connection):
     df_movements = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
-    comulative_result = reports_utils.add_cum_stock_df(df_movements)
+    cumulative_result = reports_utils.add_cum_stock_df(df_movements)
     _, agg_ID_path, _ = reports_utils.create_folders()
     file_name = 'test_mov_per_ID.txt'
     reports_utils.save_txt_mov_per_ID(df_drugs,
-                                      comulative_result,
+                                      cumulative_result,
                                       folder_path=agg_ID_path,
                                       file_name=file_name,
                                       )
     # Check that the file was created
     assert os.path.exists(os.path.join(agg_ID_path, 'test_mov_per_ID.txt'))
-
-
 
 def pytest_sessionfinish(session, exitstatus):
     # Close the database connection after all tests have finished
