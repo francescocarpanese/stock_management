@@ -18,3 +18,7 @@ pyinstaller --onefile ./stock_management/main.py
 '@
 
 Invoke-Expression -Command $pyInstallerCmd
+
+# Back to previous env
+$activateEnvCmd = "conda deactivate"
+Invoke-Expression -Command $activateEnvCmd
