@@ -3,10 +3,11 @@ from  stock_management.layouts import get_report_layout
 import PySimpleGUI as sg
 import time
 from datetime import datetime
+from stock_management import reports_utils
 
 
 def save_report(window, values, db_connection):
-    pass
+    folder_base_path = reports_utils.create_folders()
 
 def check_entries(window, values):
     pass

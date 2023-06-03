@@ -5,8 +5,10 @@ import os
 from tabulate import tabulate
 import pandas as pd
 import stock_management.reports_utils as reports_utils
+import datetime
 
 BASE_DIR = 'reports'
+
 # Create report directory if not existing
 if not os.path.exists(BASE_DIR):
     os.makedirs(BASE_DIR)
@@ -161,3 +163,42 @@ def compute_consumption_agg_drug_ID(
     df_out = pd.merge(df_mov_agg, df_mov_stock_date, on='drug_id', how='outer')
 
     return df_out
+
+def create_folders(base_folder_path = BASE_DIR):
+    today = datetime.date.today()
+    year_folder = os.path.join(base_folder_path, str(today.year))
+    month_folder = os.path.join(year_folder, str(today.month))
+    day_folder = os.path.join(month_folder, str(today.day))
+
+    # Create year folder if it doesn't exist
+    if not os.path.exists(year_folder):
+        os.makedirs(year_folder)
+
+    # Create month folder if it doesn't exist
+    if not os.path.exists(month_folder):
+        os.makedirs(month_folder)
+
+    # Create day folder if it doesn't exist
+    if not os.path.exists(day_folder):
+        os.makedirs(day_folder)
+
+    # Find the highest existing ID folder
+    # Neglet the name of the smear_test
+    id_folders = [f.rsplit("_",1)[0] for f in os.listdir(day_folder) if f.startswith("ID_")]
+    if id_folders:
+        last_id = max([int(f.split("_")[1]) for f in id_folders])
+        new_id = str(last_id + 1).zfill(2)
+    else:
+        new_id = "01"
+
+    # Create new ID folder
+    id_folder = os.path.join(day_folder, 'ID_' + new_id  )
+    os.makedirs(id_folder)
+
+    # Create aggregation_ID folder
+    os.makedirs(os.path.join(id_folder, 'aggregation_ID'))
+
+    # Create aggregation_nome folder
+    os.makedirs(os.path.join(id_folder, 'aggregation_nome'))
+
+    return id_folder
