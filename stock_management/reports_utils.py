@@ -65,9 +65,9 @@ def add_cum_stock_df(df):
 
     return df
 
-def save_txt_mov_per_ID(df_drug, df_mov, file_name='mov_per_ID.txt'):
+def save_txt_mov_per_ID(df_drug, df_mov, folder_path, file_name='mov_per_ID.txt'):
     # This has to be fildered by date already
-    file_path = os.path.join(BASE_DIR, file_name)
+    file_path = os.path.join(folder_path, file_name)
     df_drug.sort_values(by=['name'], inplace=True)
     with open(file_path, 'w') as f:
         for index, row in df_drug.iterrows():
@@ -83,7 +83,8 @@ def save_txt_mov_per_ID(df_drug, df_mov, file_name='mov_per_ID.txt'):
 
 def save_txt_agg_per_ID(
         df_drug,
-        df_mov,
+        df_consumption_ID,
+        folder_path,
         mask=None,
         file_name='consumption_per_ID.txt',
         col_mask_drug = None,
@@ -91,27 +92,27 @@ def save_txt_agg_per_ID(
         ):
     
 
-    # df_mov needs to have already the cumulative stock added
+    # df_consumption_ID needs to have already the cumulative stock added
     df_drug.sort_values(by=['name'], inplace=True)
 
     # Applying masks
     if mask is not None:
-        df_mov = df_mov[mask]
+        df_consumption_ID = df_consumption_ID[mask]
     
     # Display all columns if no mask is provided
     if col_mask_drug is None:
         col_mask_drug = df_drug.columns
 
     if col_mask_mov is None:
-        col_mask_mov = df_mov.columns
+        col_mask_mov = df_consumption_ID.columns
 
     # Compose the output path
-    out_path = os.path.join(BASE_DIR, file_name)
+    out_path = os.path.join(folder_path, file_name)
 
     with open(out_path, 'w') as f:
         for index, row in df_drug.iterrows():
             # Extrac the movements for each drug_id
-            df_consumption_drug_id = df_mov[df_mov['drug_id'] == index]
+            df_consumption_drug_id = df_consumption_ID[df_consumption_ID['drug_id'] == index]
             row_df = pd.DataFrame([row], columns=df_drug.columns)
             table_row = tabulate(row_df[col_mask_drug], headers='keys', tablefmt='simple', showindex=False)
             f.write(table_row)
@@ -119,6 +120,55 @@ def save_txt_agg_per_ID(
             table_mov = tabulate(df_consumption_drug_id[col_mask_mov], headers='keys', tablefmt='psql', showindex=False)
             f.write(table_mov)
             f.write('\n\n')
+
+def save_xlsx_agg_per_ID(
+        df_drug,
+        df_consumption_ID,
+        folder_path,
+        mask=None,
+        file_name='consumption_per_ID.xlsx',
+        col_mask_drug = None,
+        col_mask_mov = None,
+        ):
+    
+
+    # df_consumption_ID needs to have already the cumulative stock added
+    df_drug.sort_values(by=['name'], inplace=True)
+
+    # Applying masks
+    if mask is not None:
+        df_consumption_ID = df_consumption_ID[mask]
+    
+    # Display all columns if no mask is provided
+    if col_mask_drug is None:
+        col_mask_drug = df_drug.columns
+
+    if col_mask_mov is None:
+        col_mask_mov = df_consumption_ID.columns
+
+    # Compose the output path
+    out_path = os.path.join(folder_path, file_name)
+
+    # Add drug_id from index in df_drug
+    df_drug['drug_id'] = df_drug.index
+    df_drug.drop(columns=['last_inventory_date'], inplace=True)
+
+    # Replace 
+
+    df_merged = pd.merge(df_drug, df_consumption_ID, on='drug_id', how='outer')
+
+    # Select columns to display
+    df_merged = df_merged[col_mask_drug + col_mask_mov]
+    
+    # Create a Pandas Excel writer object
+    writer = pd.ExcelWriter(out_path, engine='xlsxwriter')
+
+    # Write the DataFrame to the Excel file
+    df_merged.to_excel(writer, index=False, sheet_name='Sheet1')
+
+    # Apply formatting to the file
+    format_xlsx(df_merged, writer)
+
 
 def compute_consumption_agg_drug_ID(
         df_drug,
@@ -184,21 +234,44 @@ def create_folders(base_folder_path = BASE_DIR):
 
     # Find the highest existing ID folder
     # Neglet the name of the smear_test
-    id_folders = [f for f in os.listdir(day_folder) if f.startswith("ID_")]
-    if id_folders:
-        last_id = max([int(f.split("_")[1]) for f in id_folders])
+    report_folders = [f for f in os.listdir(day_folder) if f.startswith("ID_")]
+    if report_folders:
+        last_id = max([int(f.split("_")[1]) for f in report_folders])
         new_id = str(last_id + 1).zfill(2)
     else:
         new_id = "01"
 
     # Create new ID folder
-    id_folder = os.path.join(day_folder, 'ID_' + new_id  )
-    os.makedirs(id_folder)
+    report_folder_path = os.path.join(day_folder, 'ID_' + new_id  )
+    os.makedirs(report_folder_path)
 
+    
     # Create aggregation_ID folder
-    os.makedirs(os.path.join(id_folder, 'aggregation_ID'))
+    agg_ID_folder_path = os.path.join(report_folder_path, 'aggregation_ID')
+    os.makedirs(agg_ID_folder_path)
 
     # Create aggregation_nome folder
-    os.makedirs(os.path.join(id_folder, 'aggregation_nome'))
+    agg_name_folder_path = os.path.join(report_folder_path, 'aggregation_nome')
+    os.makedirs(agg_name_folder_path)
 
-    return id_folder
+    return report_folder_path, agg_ID_folder_path, agg_name_folder_path
+
+
+
+def format_xlsx(df, writer):
+
+    (max_row, max_col) = df.shape
+
+    # Get the workbook and worksheet objects
+    workbook = writer.book
+    worksheet = writer.sheets['Sheet1']
+
+    for i, column in enumerate(df.columns):
+        max_len = max(df[column].astype(str).map(len).max(), len(column))
+        worksheet.set_column(i, i, max_len + 5)
+
+    # Add the autofilter
+    worksheet.autofilter(0, 0, max_row, max_col - 1)
+
+    # Save the Excel file
+    writer.close()
