@@ -3,7 +3,7 @@ import pytest
 from stock_management.create_tables import create_all_tables
 import os
 import sqlite3
-from datetime import date
+from datetime import date, datetime
 from stock_management.movement_win_utils import update_stock
 import stock_management.reports_utils as reports_utils
 import pandas as pd
@@ -145,7 +145,7 @@ def test_add_cum_stock_df(df_movs, store_csv=False):
     path_to_csv = 'test_data/test_cum_stock_agg.csv'
     cumulative_result = reports_utils.add_cum_stock_df(df_movs)
     if store_csv:
-        # Store in file for debugging
+        # Store in file for if mofidications are made to the database created for testing
         cumulative_result.to_csv(path_to_csv)
     
     comulative_result_expected = pd.read_csv(path_to_csv, index_col=0, parse_dates=['date_movement','last_inventory_date','entry_datetime'])
@@ -155,14 +155,82 @@ def test_add_cum_stock_df(df_movs, store_csv=False):
     diff = cumulative_result.compare( comulative_result_expected)
     assert diff.empty
     
-
-def test_compute_consumption_per_ID(db_connection):
+@pytest.mark.parametrize("start_date, end_date, expected_consumption", [
+    (   # Take all movements
+        date(2023,1,1),
+        date(3000,1,31),
+        pd.DataFrame([
+            [1,10,2,8,date(1900,1,1)],
+            [2,10,2,8,date(1900,1,1)],
+            [3,10,2,19,date(2023,1,3)],
+            [4,10,1,9,date(1900,1,1)],
+            [5,10,2,8,date(1900,1,1)],
+            [6,10,11,0,date(1900,1,1)],
+            [7,10,11,20,date(2023,1,3)],
+            [8,10,1,9,date(1900,1,1)],
+            [9,10,6,4,date(1900,1,1)],
+        ],
+        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
+    ),
+    (   # Take only the first 2 days
+        date(2000,1,1),
+        date(2023,1,2),
+        pd.DataFrame([
+            [1,10,2,8,date(1900,1,1)],
+            [2,10,2,8,date(1900,1,1)],
+            [3,10,1,9,date(1900,1,1)],
+            [4,10,1,9,date(1900,1,1)],
+            [5,10,1,9,date(1900,1,1)],
+            [6,10,11,0,date(1900,1,1)],
+            [7,10,11,0,date(1900,1,1)],
+            [8,10,1,9,date(1900,1,1)],
+            [9,10,3,7,date(1900,1,1)],
+        ],
+        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
+    ),
+    (   # Take only the first month
+        date(2000,1,1),
+        date(2023,1,31),
+        pd.DataFrame([
+            [1,10,2,8,date(1900,1,1)],
+            [2,10,2,8,date(1900,1,1)],
+            [3,10,2,19,date(2023,1,3)],
+            [4,10,1,9,date(1900,1,1)],
+            [5,10,1,9,date(1900,1,1)],
+            [6,10,11,0,date(1900,1,1)],
+            [7,10,11,20,date(2023,1,3)],
+            [8,10,1,9,date(1900,1,1)],
+            [9,10,6,4,date(1900,1,1)],
+        ],
+        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
+    ),
+    (   # Period with no entry
+        date(2000,1,1),
+        date(2000,1,2),
+        pd.DataFrame([],
+        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
+    ),
+])
+def test_compute_consumption_per_ID(db_connection, start_date, end_date, expected_consumption, store_xlsx=True, store_csv=False):
+    
     df_movements = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
     cumulative_result = reports_utils.add_cum_stock_df(df_movements)
-    df_consumption_ID = reports_utils.compute_consumption_agg_drug_ID(df_drugs, cumulative_result, date(2023,1,1), date(2023,1,31))
+    df_consumption_ID = reports_utils.compute_consumption_agg_drug_ID(df_drugs, cumulative_result, start_date=start_date, end_date=end_date)
+   
+    if store_xlsx:
+        path_to_csv = 'test_data/consumption_agg_per_ID.xlsx'
+        # Store in file for if mofidications are made to the database created for testing
+        df_consumption_ID.to_excel(path_to_csv, index=False)
 
-    pass
+    if store_csv:
+        path_to_csv = 'test_data/consumption_agg_per_ID.csv'
+        # Store in file for if mofidications are made to the database created for testing
+        df_consumption_ID.to_csv(path_to_csv, index=False)
+ 
+    diff = df_consumption_ID.compare(expected_consumption)
+
+    assert diff.empty
 
 
 def test_gen_consumption_per_ID_txt(db_connection, df_drugs, df_consumption_ID):
@@ -212,3 +280,6 @@ def test_gen_mov_report_per_ID_txt(db_connection):
 def pytest_sessionfinish(session, exitstatus):
     # Close the database connection after all tests have finished
     db_connection().close()
+
+def s2date(s):
+    datetime.strptime(s, '%Y-%m-%d').date()

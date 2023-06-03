@@ -51,7 +51,6 @@ def add_cum_stock_df(df):
     grouped_df = df.groupby('drug_id')
     df['stock_after_movement'] = 0
     df['last_inventory_date'] = date(1900,1,1)
-    df['last_inventory_stock'] = 0
     
     # Iterate over each group and apply the custom function
     for group_name, group_df in grouped_df:
@@ -179,12 +178,19 @@ def compute_consumption_agg_drug_ID(
         end_date = date(2100,1,1),
         ):
     
+    # Init for safe exit
+    df_out = pd.DataFrame([],columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
+
     # The df_mov needs to have already the cumulative stock added
 
     df_drug.sort_values(by=['name'], inplace=True)
     df_drug = df_drug[df_drug['current_stock'] > 0]
 
     df_mov =df_mov[(df_mov['date_movement'] >= start_date) & (df_mov['date_movement'] <= end_date)]
+    
+    # Return if no movements are available
+    if df_mov.empty:
+        return df_out
     
     # Extract entry and exit
     df_mov['entry'] = df_mov.apply(lambda x: x['pieces_moved'] if x['movement_type'] == 'entry' else 0, axis=1)
@@ -199,13 +205,17 @@ def compute_consumption_agg_drug_ID(
     # Merge entry and exit
     df_mov_agg = pd.merge(df_mov_entry, df_mov_exit, on='drug_id', how='outer')
 
-    # Extract the latest available stock for each drug_id
-    df_mov_stock = df_mov.groupby('drug_id')['stock_after_movement'].last().reset_index()
+    # Extract stock after movement for the lastest date_movement
+    df_mov_stock = pd.DataFrame()
+    #df_mov['date_movement'] = pd.to_datetime(df_mov['date_movement'])
 
-    # Rename column stock_after_movement to stock
-    df_mov_stock.rename(columns={'stock_after_movement': 'stock'}, inplace=True)
 
-    # Extract the date of latest available stock for each drug_id
+    latest_dates = df_mov.groupby('drug_id')['date_movement'].max()
+    df_mov_stock['stock'] = df_mov.groupby('drug_id').apply(lambda x: x.loc[x['date_movement'] == latest_dates.loc[x.name], 'stock_after_movement'].min())
+    
+    #df_mov_stock['stock'] = df_mov.groupby('drug_id').apply(lambda x: x.loc[x['date_movement'].idxmax(), 'stock_after_movement'])
+
+    # Extract the date of latest available inventory for each drug_id
     df_mov_date = df_mov.groupby('drug_id')['last_inventory_date'].last().reset_index()
 
     # Merge the latest available stock and date
