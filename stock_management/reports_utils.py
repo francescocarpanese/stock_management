@@ -71,21 +71,42 @@ def add_cum_stock_df(df, groupby_cols):
 
     return df
 
-def save_txt_mov_per_ID(df_drug, df_mov, folder_path, file_name='mov_per_ID.txt'):
+def save_txt_mov_group(df,
+                        folder_path,
+                        file_name='mov_per_ID.txt',
+                        mask_col = None,
+                        labels = None,
+                        groupby_cols = ['drug_id',],
+                        ):
+
     # This has to be fildered by date already
     file_path = os.path.join(folder_path, file_name)
-    df_drug.sort_values(by=['name'], inplace=True)
+    df.sort_values(by=['name'], inplace=True)
+
     with open(file_path, 'w') as f:
-        for index, row in df_drug.iterrows():
-           df_mov_drug = df_mov[df_mov['drug_id'] == index]
-           df_mov_drug.sort_values(by=['date_movement'], inplace=True)
-           row_df = pd.DataFrame([row], columns=df_drug.columns)
-           table_row = tabulate(row_df, headers='keys', tablefmt='simple')
-           f.write(table_row)
-           f.write('\n')
-           table_mov = tabulate(df_mov_drug, headers='keys', tablefmt='psql')
-           f.write(table_mov)
-           f.write('\n\n')
+        # Iteratate over goupby drug_id
+        grouped_df = df.groupby(groupby_cols)
+
+        # Get the groups sorted by name, unit, and type
+        groups_sorted = grouped_df.groups.keys()
+        groups_sorted = sorted(groups_sorted)
+
+        # Reorder the groups
+        df_reordered = pd.concat([grouped_df.get_group(group) for group in groups_sorted])
+
+        for group_name, group_df in df_reordered.groupby(groupby_cols):
+            # Apply masks
+            if mask_col is not None:
+                group_df = group_df[mask_col]
+            if labels is not None:
+                if len(labels) == len(group_df.columns):
+                    # Rename the columns
+                    group_df.columns = labels
+
+            group_df.sort_values(by=['date_movement'], inplace=True)
+            table = tabulate(group_df, headers='keys', tablefmt='psql')
+            f.write(table)
+            f.write('\n\n')
 
 def save_txt_agg_per_ID(
         df_drug,
@@ -127,55 +148,66 @@ def save_txt_agg_per_ID(
             f.write(table_mov)
             f.write('\n\n')
 
-def save_xlsx_agg_per_ID(
-        df_drug,
-        df_consumption_ID,
+def save_xlsx_consumption(
+        df,
         folder_path,
         mask=None,
+        labels= None,
         file_name='consumption_per_ID.xlsx',
-        col_mask_drug = None,
-        col_mask_mov = None,
         ):
     
 
-    # df_consumption_ID needs to have already the cumulative stock added
-    df_drug.sort_values(by=['name'], inplace=True)
-
     # Applying masks
     if mask is not None:
-        df_consumption_ID = df_consumption_ID[mask]
-    
-    # Display all columns if no mask is provided
-    if col_mask_drug is None:
-        col_mask_drug = df_drug.columns
+        df = df[mask]
+    if labels is not None:
+        if len(labels) == len(df.columns):
+            # Rename the columns
+            df.columns = labels
 
-    if col_mask_mov is None:
-        col_mask_mov = df_consumption_ID.columns
+    
+    # Compose the output path
+    out_path = os.path.join(folder_path, file_name)
+
+    # Create a Pandas Excel writer object
+    writer = pd.ExcelWriter(out_path, engine='xlsxwriter')
+
+    sheet_name = 'Consumption'
+    # Write the DataFrame to the Excel file
+    df.to_excel(writer, index=False, sheet_name=sheet_name)
+
+    # Apply formatting to the file
+    format_xlsx(df, writer, sheet_name=sheet_name)
+
+    # Save the Excel file
+    writer.close()
+
+def save_xlsx_full_dataset(df_drugs,
+                           df_movs,
+                           folder_path,
+                           file_name,
+                           ):
+    
+    df_drugs['drug_id'] = df_drugs.index
+    df_merged = pd.merge(df_movs, df_drugs, on='drug_id', how='outer')
 
     # Compose the output path
     out_path = os.path.join(folder_path, file_name)
 
-    # Add drug_id from index in df_drug
-    df_drug['drug_id'] = df_drug.index
-    df_drug.drop(columns=['last_inventory_date'], inplace=True)
-
-    # Replace 
-    df_merged = pd.merge(df_drug, df_consumption_ID, on='drug_id', how='outer')
-
-    # Select columns to display
-    df_merged = df_merged[col_mask_drug + col_mask_mov]
-    
     # Create a Pandas Excel writer object
     writer = pd.ExcelWriter(out_path, engine='xlsxwriter')
 
+    sheet_name = 'Full'
     # Write the DataFrame to the Excel file
-    df_merged.to_excel(writer, index=False, sheet_name='Sheet1')
+    df_merged.to_excel(writer, index=False, sheet_name=sheet_name)
 
     # Apply formatting to the file
-    format_xlsx(df_merged, writer)
+    format_xlsx(df_merged, writer, sheet_name=sheet_name)
 
     # Save the Excel file
     writer.close()
+
+    pass
 
 
 def compute_consumption_group(
@@ -288,15 +320,12 @@ def create_folders(base_folder_path = BASE_DIR):
 
     return report_folder_path, agg_ID_folder_path, agg_name_folder_path
 
-
-
-def format_xlsx(df, writer):
-
+def format_xlsx(df, writer, sheet_name='Sheet1'):
     (max_row, max_col) = df.shape
 
     # Get the workbook and worksheet objects
     workbook = writer.book
-    worksheet = writer.sheets['Sheet1']
+    worksheet = writer.sheets[sheet_name]
 
     for i, column in enumerate(df.columns):
         max_len = max(df[column].astype(str).map(len).max(), len(column))
@@ -310,3 +339,17 @@ def computed_cum_res(df_drugs, df_movs, groupby_cols):
     df_drugs.rename(columns={'id':'drug_id'}, inplace=True)
     df_merged = pd.merge(df_movs, df_drugs, on='drug_id', how='left')
     return reports_utils.add_cum_stock_df(df_merged, groupby_cols=groupby_cols)
+
+def add_drug_info_from_ID(df_drugs, df):
+    cols = ['drug_id','name', 'dose','units','expiration','pieces_per_box','type','lote']
+    df_drugs['drug_id'] = df_drugs.index
+    df_merged = pd.merge(df, df_drugs[cols], on='drug_id', how='left')
+    return df_merged
+
+def save_INFO_txt(folder_path, file_path, start_date, end_date):
+    out_path = os.path.join(folder_path, file_path)
+    with open(out_path, 'w') as f:
+        f.write('Start date: {}\n'.format(start_date))
+        f.write('End date: {}\n'.format(end_date))
+        f.write('Generated on: {}\n'.format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        f.write('Generated by: {}\n'.format(os.getlogin()))

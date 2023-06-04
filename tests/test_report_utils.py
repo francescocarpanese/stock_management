@@ -126,16 +126,6 @@ def df_movs(db_connection):
     df_movs = sql_utils.get_all_movements_df(db_connection)
     return df_movs
 
-
-@pytest.fixture(scope='function')
-def df_consumption_ID(db_connection):
-    # Generate consumption full period
-    df_movs = sql_utils.get_all_movements_df(db_connection)
-    df_drugs = sql_utils.get_all_drugs_df(db_connection)
-    cumulative_result = reports_utils.add_cum_stock_df(df_movs)
-    df_consumption_ID = reports_utils.compute_consumption_agg_drug_ID(df_drugs, cumulative_result, date(1990,1,1), date(2100,1,31))
-    return df_consumption_ID
-
 def test_get_all_df(db_connection, gen_drug_list, gen_movement_list):
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
     df_movs = sql_utils.get_all_movements_df(db_connection)
@@ -390,49 +380,209 @@ def test_compute_consumption_per_name_dose(db_connection,
     assert diff.empty
 
 
-def test_gen_consumption_per_ID_txt(db_connection, df_drugs, df_consumption_ID):
-    file_name = 'test_consumption_per_ID.txt'
-    _, agg_ID_path, _ = reports_utils.create_folders()
-    reports_utils.save_txt_agg_per_ID(
-        df_drugs,
-        df_consumption_ID,
-        folder_path=agg_ID_path,
-        file_name=file_name,
-        col_mask_mov=['exit', 'entry', 'stock', 'last_inventory_date'],
-        col_mask_drug=['name', 'dose', 'units', 'expiration', 'pieces_per_box', 'type', 'lote'],
-        )
-    
-    # Check that the file was created
-    assert os.path.exists(os.path.join(agg_ID_path, file_name))
+# def test_gen_consumption_per_ID_txt(db_connection):
+#     groupby_cols = ['drug_id',]
 
-def test_gen_consumption_per_ID_xlsx(db_connection, df_drugs, df_consumption_ID):
-    file_name = 'test_consumption_per_ID.xlsx'
-    _, agg_ID_path, _ = reports_utils.create_folders()
-    reports_utils.save_xlsx_agg_per_ID(
-        df_drugs,
-        df_consumption_ID,
-        folder_path=agg_ID_path,
-        file_name=file_name,
-        col_mask_mov=['exit', 'entry', 'stock', 'last_inventory_date'],
-        col_mask_drug=['name', 'dose', 'units', 'expiration', 'pieces_per_box', 'type', 'lote'],
-        )
-    
-    # Check that the file was created
-    assert os.path.exists(os.path.join(agg_ID_path, file_name))
+#     df_movs = sql_utils.get_all_movements_df(db_connection)
+#     df_drugs = sql_utils.get_all_drugs_df(db_connection)
+   
+#     # Compute cumlative results per group
+#     cumulative_result = reports_utils.computed_cum_res(
+#         df_drugs=df_drugs,
+#         df_movs=df_movs,
+#         groupby_cols=groupby_cols
+#         )
 
-def test_gen_mov_report_per_ID_txt(db_connection):
+#     # Compute consumption per group
+#     df_consumption_ID = reports_utils.compute_consumption_group(
+#         cumulative_result,
+#         start_date=date(1990,1,1),
+#         end_date=date(3000,1,31)
+#         groupby_cols=groupby_cols,
+#         )
+
+#     # Save the file
+#     file_name = 'test_consumption_per_ID.txt'
+#     _, agg_ID_path, _ = reports_utils.create_folders()
+#     reports_utils.save_txt_agg_per_ID(
+#         df_drugs,
+#         df_consumption_ID,
+#         folder_path=agg_ID_path,
+#         file_name=file_name,
+#         col_mask_mov=['exit', 'entry', 'stock', 'last_inventory_date'],
+#         col_mask_drug=['name', 'dose', 'units', 'expiration', 'pieces_per_box', 'type', 'lote'],
+#         )
+    
+#     # Check that the file was created
+#     assert os.path.exists(os.path.join(agg_ID_path, file_name))
+
+
+
+def test_gen_consumption_per_ID_xlsx(db_connection):
+    groupby_cols = ['drug_id',]
+
     df_movs = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
-    cumulative_result = reports_utils.add_cum_stock_df(df_movs)
+   
+    # Compute cumlative results per group
+    cumulative_result = reports_utils.computed_cum_res(
+        df_drugs=df_drugs,
+        df_movs=df_movs,
+        groupby_cols=groupby_cols
+        )
+
+    # Compute consumption per group
+    df_consumption_ID = reports_utils.compute_consumption_group(
+        cumulative_result,
+        start_date = date(1990,1,1),
+        end_date = date(3000,1,1),
+        groupby_cols=groupby_cols,
+        )    
+    
+    df_out = reports_utils.add_drug_info_from_ID(df_drugs, df_consumption_ID)
+    
+    mask = ['name', 'dose', 'units', 'expiration', 'pieces_per_box', 'type', 'lote', 'entry', 'exit', 'stock', 'last_inventory_date', 'last_inventory_stock']
+    labels = ['nome', 'dosagem', 'unidades', 'expiracao', 'unidades_por_caixa', 'tipo', 'lote', 'entrada', 'saida', 'stock', 'ultima_inventario', 'stock_ultima_inventario']
+
+    file_name = 'test_consumption_per_ID.xlsx'
+    _, agg_ID_path, _ = reports_utils.create_folders()
+    reports_utils.save_xlsx_consumption(
+        df_out,
+        mask=mask,
+        labels=labels,
+        folder_path=agg_ID_path,
+        file_name=file_name,
+        )
+    
+    # Check that the file was created
+    assert os.path.exists(os.path.join(agg_ID_path, file_name))
+
+def test_gen_consumption_per_nome_dosagem_xlsx(db_connection):
+    groupby_cols = ['name','dose','type']
+
+    df_movs = sql_utils.get_all_movements_df(db_connection)
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
+   
+    # Compute cumlative results per group
+    cumulative_result = reports_utils.computed_cum_res(
+        df_drugs=df_drugs,
+        df_movs=df_movs,
+        groupby_cols=groupby_cols
+        )
+
+    # Compute consumption per group
+    df_consumption = reports_utils.compute_consumption_group(
+        cumulative_result,
+        start_date = date(1990,1,1),
+        end_date = date(3000,1,1),
+        groupby_cols=groupby_cols,
+        )    
+    
+    
+    mask = ['name', 'dose','type', 'entry', 'exit', 'stock', 'last_inventory_date', 'last_inventory_stock']
+    labels = ['nome', 'dosagem','tipo', 'entrada', 'saida', 'stock', 'ultima_inventario', 'stock_ultima_inventario']
+
+    file_name = 'test_consumption_per_ID.xlsx'
+    _, _, path_agg_name = reports_utils.create_folders()
+    reports_utils.save_xlsx_consumption(
+        df_consumption,
+        mask=mask,
+        labels=labels,
+        folder_path= path_agg_name,
+        file_name=file_name,
+        )
+    
+    # Check that the file was created
+    assert os.path.exists(os.path.join( path_agg_name, file_name))
+
+def test_gen_mov_report_per_ID_txt(db_connection):
+    groupby_cols = ['drug_id',]
+    df_movs = sql_utils.get_all_movements_df(db_connection)
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
+   
+    # Compute cumlative results per group
+    cumulative_result = reports_utils.computed_cum_res(
+        df_drugs=df_drugs,
+        df_movs=df_movs,
+        groupby_cols=groupby_cols
+        )
+
     _, agg_ID_path, _ = reports_utils.create_folders()
     file_name = 'test_mov_per_ID.txt'
-    reports_utils.save_txt_mov_per_ID(df_drugs,
+    mask_col = [
+        'name',
+        'dose',
+        'units',
+        'expiration',
+        'pieces_per_box',
+        'type',
+        'lote',
+        'date_movement',
+        'destination_origin',
+        'movement_type',
+        'stock_after_movement'
+        ] 
+    labels = None
+    reports_utils.save_txt_mov_group(
                                       cumulative_result,
                                       folder_path=agg_ID_path,
                                       file_name=file_name,
+                                      mask_col=mask_col,
+                                      labels=labels,
                                       )
     # Check that the file was created
     assert os.path.exists(os.path.join(agg_ID_path, 'test_mov_per_ID.txt'))
+
+
+def test_gen_mov_report_per_name_txt(db_connection):
+    groupby_cols = ['name','dose','type']
+    df_movs = sql_utils.get_all_movements_df(db_connection)
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
+   
+    # Compute cumlative results per group
+    cumulative_result = reports_utils.computed_cum_res(
+        df_drugs=df_drugs,
+        df_movs=df_movs,
+        groupby_cols=groupby_cols
+        )
+
+    _, _, agg_name_folder = reports_utils.create_folders()
+    file_name = 'test_mov_nome_dose_type.txt'
+    mask_col = [
+        'name',
+        'dose',
+        'units',
+        'type',
+        'date_movement',
+        'destination_origin',
+        'movement_type',
+        'stock_after_movement'
+        ] 
+    labels = None
+    reports_utils.save_txt_mov_group(
+                                      cumulative_result,
+                                      folder_path=agg_name_folder,
+                                      file_name=file_name,
+                                      mask_col=mask_col,
+                                      labels=labels,
+                                      groupby_cols=groupby_cols,
+                                      )
+    # Check that the file was created
+    assert os.path.exists(os.path.join(agg_name_folder, file_name))
+
+def test_save_full_ds(db_connection):
+    df_movs = sql_utils.get_all_movements_df(db_connection)
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
+    report_path, _, _ = reports_utils.create_folders()
+    file_name = 'test_full_ds.xlsx'
+    out_file_path = os.path.join(report_path, file_name)
+    reports_utils.save_xlsx_full_dataset(
+        df_drugs,
+        df_movs,
+        folder_path=report_path,
+        file_name=file_name,
+        )
+    assert os.path.exists(out_file_path)
 
 def pytest_sessionfinish(session, exitstatus):
     # Close the database connection after all tests have finished
