@@ -8,34 +8,91 @@ import os
 from datetime import date
 
 def save_report(window, values, db_connection):
-    # TODO need to be clean up
-    folder_base_path, agg_ID_path, _ = reports_utils.create_folders()
-    df_movements = sql_utils.get_all_movements_df(db_connection)
-    df_drugs = sql_utils.get_all_drugs_df(db_connection)
-    comulative_result = reports_utils.add_cum_stock_df(df_movements)
-    df_consumption_ID = reports_utils.compute_consumption_agg_drug_ID(df_drugs, comulative_result, date(1990,1,1), date(2100,1,31))
-    reports_utils.save_txt_agg_per_ID(
-        df_drugs,
-        df_consumption_ID,
-        folder_path=agg_ID_path,
-        col_mask_mov=['exit', 'entry', 'stock', 'last_inventory_date'],
-        col_mask_drug=['name', 'dose', 'units', 'expiration', 'pieces_per_box', 'type', 'lote'],
+    folder_base_path, agg_ID_path, agg_name_path = reports_utils.create_folders()
+  
+    if not values['-in_data_start-']:
+        start_date = date(1990, 1, 1)
+    else:
+        start_date = datetime.strptime(values['-in_data_start-'], '%Y-%m-%d').date()
+    
+    if not values['-in_data_end-']:
+        end_date = date(2300, 1, 1)
+    else:
+        end_date = datetime.strptime(values['-in_data_end-'], '%Y-%m-%d').date()
+
+    # Save consumption report grouped by name, dose, type
+    try:
+        reports_utils.save_xlsx_consumption_nome_dose_type(
+            db_connection=db_connection,
+            start_date=start_date,
+            end_date=end_date,
+            folder_path=agg_name_path,
+            file_name='consumption_nome_dose_type.xlsx',
         )
-    reports_utils.save_xlsx_agg_per_ID(
-        df_drugs,
-        df_consumption_ID,
-        folder_path=agg_ID_path,
-        col_mask_mov=['exit', 'entry', 'stock', 'last_inventory_date'],
-        col_mask_drug=['name', 'dose', 'units', 'expiration', 'pieces_per_box', 'type', 'lote'],
+    except Exception as e:
+        print(e)
+        sg.popup_error('Erro ao gerar o relatorio de consumo por nome, dose e tipo')
+    
+    # Save consumption report grouped by ID (drug with same lote)
+    try:
+        reports_utils.save_xlsx_consumption_ID(
+            db_connection=db_connection,
+            start_date=start_date,
+            end_date=end_date,
+            folder_path=agg_ID_path,
+            file_name='consumption_ID.xlsx',
         )
-   
+    except Exception as e:
+        print(e)
+        sg.popup_error('Erro ao gerar o relatorio de consumo por ID')
+    
+    # Save info for the generated reports
+    try:
+        reports_utils.save_INFO_txt(
+            folder_path=folder_base_path,
+            file_name='INFO.txt',
+            start_date=start_date,
+            end_date=end_date,
+        )
+    except Exception as e:
+        print(e)
+        sg.popup_error('Erro ao gerar o ficheiro INFO.txt')
+
+    # Dump full database
+    try:
+        reports_utils.dump_full_dataset(
+            db_connection=db_connection,
+            folder_path=folder_base_path,
+            file_name='dump.xlsx',
+        )
+    except Exception as e:
+        print(e)
+        sg.popup_error('Erro ao gerar o dump da base de dados')
+
+    # Save movement report per ID
+    try:
+        reports_utils.gen_mov_report_ID(
+        db_connection=db_connection,
+        folder_path=agg_ID_path,
+        )
+    except Exception as e:
+        print(e)
+        sg.popup_error('Erro ao gerar o relatorio de movimentos por ID')
+
+    # Save movement report per nome, dose, type
+    try:
+        reports_utils.gen_mov_report_nome_dose_type(
+            db_connection=db_connection,
+            folder_path=agg_name_path,
+        )
+    except Exception as e:
+        print(e)
+        sg.popup_error('Erro ao gerar o relatorio de movimentos por nome, dose e tipo')
 
     window['-txt_link_folder-'].update(folder_base_path,
                                        text_color='blue',
                                        visible=True,)
 
-def check_entries(window, values):
-    pass
         
 def report_session(
     db_connection,
