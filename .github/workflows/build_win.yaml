@@ -6,6 +6,10 @@ on:
       release_version:
         description: 'Release version'
         required: true
+  release:
+    types:
+      - created
+
 
 jobs:
   build:
