@@ -147,6 +147,6 @@ def report_session(
         for ev, arg in zip(test_events, test_args):
             ev(window, event, values, arg)
 
-    window.close()    
+    window.close()
 
         

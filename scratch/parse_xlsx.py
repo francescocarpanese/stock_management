@@ -4,6 +4,7 @@ from stock_management.sql_utils import add_drug, add_movement, get_last_row_id
 import os
 import sqlite3
 from stock_management.common_utils import clear_string, parse_dose_units
+import datetime
 
 path_to_excel = 'test_data/Maio.xlsx'
 
@@ -66,6 +67,16 @@ def store_db(df):
                 lote=row['Lote'],
                 stock=row['Stock de peças total presente'],
                     )
+            add_movement(
+                conn=conn,
+                date_movement=datetime.datetime.now().date(),
+                destination_origin='Francesco migration',
+                pieces_moved=row['Stock de peças total presente'],
+                movement_type='inventory',
+                signature='Francesco',
+                drug_id=get_last_row_id(conn, 'drugs'),
+            )
+
         except Exception as e:
             print(e)
             print(row)
