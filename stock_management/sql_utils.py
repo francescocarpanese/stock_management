@@ -96,16 +96,15 @@ def get_all_drugs_df(conn):
     drugs = get_all_rows(conn, 'drugs')
     columns = get_table_col_names(conn, 'drugs')
     df =  pd.DataFrame(drugs, columns=columns)
-    df.set_index('id', inplace=True)
     df['expiration'] = df['expiration'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
     df['last_inventory_date'] = df['last_inventory_date'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
+    df['drug_id']= df['id']
     return df
 
 def get_all_movements_df(conn):
     movements = get_all_rows(conn, 'movements')
     columns = get_table_col_names(conn, 'movements')
     df =  pd.DataFrame(movements, columns=columns)
-    df.set_index('id', inplace=True)
     df['date_movement'] = df['date_movement'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').date())
     df['entry_datetime'] = df['entry_datetime'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
     return df

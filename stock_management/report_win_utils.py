@@ -63,7 +63,7 @@ def save_report(window, values, db_connection):
         reports_utils.dump_full_dataset(
             db_connection=db_connection,
             folder_path=folder_base_path,
-            file_name='dump.xlsx',
+            file_name='full_database.xlsx',
         )
     except Exception as e:
         print(e)
@@ -88,6 +88,27 @@ def save_report(window, values, db_connection):
     except Exception as e:
         print(e)
         sg.popup_error('Erro ao gerar o relatorio de movimentos por nome, dose e tipo')
+
+   
+    # Save stock report per ID
+    try:
+        reports_utils.save_stock_ID_xlsx(
+            db_connection=db_connection,
+            folder_path=folder_base_path,
+        )
+    except Exception as e:
+        print(e)
+        sg.popup_error('Erro ao gerar o relatorio de stock por ID')
+
+    # Save stock report per nome, dose, type
+    try:
+        reports_utils.save_stock_nome_dose_type_xlsx(
+            db_connection=db_connection,
+            folder_path=folder_base_path,
+        )
+    except Exception as e:
+        print(e)
+        sg.popup_error('Erro ao gerar o relatorio de stock por nome, dose e tipo')
 
     window['-txt_link_folder-'].update(folder_base_path,
                                        text_color='blue',

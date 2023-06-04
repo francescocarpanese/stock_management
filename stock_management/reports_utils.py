@@ -209,6 +209,64 @@ def save_xlsx_full_dataset(df_drugs,
 
     pass
 
+def compute_stock_group(
+        df_cum,
+        end_date = date(2100,1,1),
+        groupby_cols = ['drug_id',],
+        ):
+    
+    # Define output columns
+    output_cols = groupby_cols + ['stock', 'last_inventory_date', 'last_inventory_stock']
+
+    # Init for safe exit
+    df_out = pd.DataFrame([],columns= output_cols)
+    
+    # Filter by date
+    df_cum =df_cum[df_cum['date_movement'] <= end_date]
+    
+    # Return if no movements are available
+    if df_cum.empty:
+        return df_out
+
+    # Group dataset
+    df_cum_grouped = df_cum.groupby(groupby_cols)
+
+    # Loop for groups
+    for group_name, group_df in df_cum_grouped:
+
+        latest_mov_date = group_df['date_movement'].max()
+        latest_last_inventory_date = group_df['last_inventory_date'].max()
+
+        # Get the inventory on the latest last inventory date
+        inventory_on_last_inventory_date = group_df.loc[(group_df['date_movement'] == latest_last_inventory_date)
+                                                        & (group_df['movement_type'] == 'inventory')
+                                                        ,
+                                                         'stock_after_movement'].min()
+        
+
+        # Get indices of dates with the latest date_movement
+        idx_latest_mov_date = group_df[group_df['date_movement'] == latest_mov_date].index
+        # Get the max of the entry_datetime for the latest date_movement
+        max_entry_datetime = group_df.loc[idx_latest_mov_date, 'entry_datetime'].max()
+        # Typically entry datatime are unique. However, when generating the db for testing they might be
+        # created on the same second. In such a case the stock is considered as the minumum of the stock_after_movement
+        stock = group_df.loc[(group_df['date_movement'] == latest_mov_date) & (group_df['entry_datetime'] == max_entry_datetime),
+                         'stock_after_movement'].min()
+        
+        
+        df_tmp = pd.DataFrame(            {
+                'stock': stock,
+                'last_inventory_date': latest_last_inventory_date,
+                'last_inventory_stock': inventory_on_last_inventory_date,
+             }, index=[0])
+        
+        for col in groupby_cols:
+            df_tmp[col] = group_name[groupby_cols.index(col)]
+
+        df_out  = pd.concat([df_out, df_tmp], ignore_index=True)
+
+    return df_out
+
 
 def compute_consumption_group(
         df_cum,
@@ -311,11 +369,11 @@ def create_folders(base_folder_path = BASE_DIR):
 
     
     # Create aggregation_ID folder
-    agg_ID_folder_path = os.path.join(report_folder_path, 'aggregation_ID')
+    agg_ID_folder_path = os.path.join(report_folder_path, 'consumo_ID')
     os.makedirs(agg_ID_folder_path)
 
     # Create aggregation_nome folder
-    agg_name_folder_path = os.path.join(report_folder_path, 'aggregation_nome')
+    agg_name_folder_path = os.path.join(report_folder_path, 'consumo_nome_dosagem_top')
     os.makedirs(agg_name_folder_path)
 
     return report_folder_path, agg_ID_folder_path, agg_name_folder_path
@@ -335,14 +393,11 @@ def format_xlsx(df, writer, sheet_name='Sheet1'):
     worksheet.autofilter(0, 0, max_row, max_col - 1)
 
 def computed_cum_res(df_drugs, df_movs, groupby_cols):
-    df_drugs.reset_index(inplace=True)
-    df_drugs.rename(columns={'id':'drug_id'}, inplace=True)
     df_merged = pd.merge(df_movs, df_drugs, on='drug_id', how='left')
     return reports_utils.add_cum_stock_df(df_merged, groupby_cols=groupby_cols)
 
 def add_drug_info_from_ID(df_drugs, df):
     cols = ['drug_id','name', 'dose','units','expiration','pieces_per_box','type','lote']
-    df_drugs['drug_id'] = df_drugs.index
     df_merged = pd.merge(df, df_drugs[cols], on='drug_id', how='left')
     return df_merged
 
@@ -504,7 +559,77 @@ def gen_mov_report_nome_dose_type(
                                       labels=labels,
                                       groupby_cols=groupby_cols,
                                       )
+
+def save_stock_ID_xlsx(
+        db_connection,
+        folder_path,
+        file_name='stock_per_ID.xlsx',
+        end_date = date(2100,1,1),
+):
+    groupby_cols = ['drug_id',]
+    df_movs = sql_utils.get_all_movements_df(db_connection)
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
+   
+    # Compute cumlative results per group
+    cumulative_result = reports_utils.computed_cum_res(
+        df_drugs=df_drugs,
+        df_movs=df_movs,
+        groupby_cols=groupby_cols
+        )
+
+    df_stock = reports_utils.compute_stock_group(
+        cumulative_result,
+        end_date = end_date,
+        groupby_cols=groupby_cols,
+        )
+
+    df_out = reports_utils.add_drug_info_from_ID(df_drugs, df_stock)
     
+    mask = ['name', 'dose', 'units', 'expiration', 'pieces_per_box', 'type', 'lote', 'stock', 'last_inventory_date', 'last_inventory_stock']
+    labels = ['nome', 'dosagem', 'unidades', 'expiracao', 'unidades_por_caixa', 'tipo', 'lote', 'stock', 'ultima_inventario', 'stock_ultima_inventario']
+
+    reports_utils.save_xlsx_consumption(
+        df_out,
+        mask=mask,
+        labels=labels,
+        folder_path=folder_path,
+        file_name=file_name,
+        )
+
+def save_stock_nome_dose_type_xlsx(
+        db_connection,
+        folder_path,
+        file_name='stock_per_nome_dose_type.xlsx',
+        end_date = date(2100,1,1),
+):
+    groupby_cols = ['name','dose','type']
+    df_movs = sql_utils.get_all_movements_df(db_connection)
+    df_drugs = sql_utils.get_all_drugs_df(db_connection)
+   
+    # Compute cumlative results per group
+    cumulative_result = reports_utils.computed_cum_res(
+        df_drugs=df_drugs,
+        df_movs=df_movs,
+        groupby_cols=groupby_cols
+        )
+
+    df_stock = reports_utils.compute_stock_group(
+        cumulative_result,
+        end_date = end_date,
+        groupby_cols=groupby_cols,
+        )
+
+    mask = ['name', 'dose', 'type', 'stock', 'last_inventory_date', 'last_inventory_stock']
+    labels = ['nome', 'dosagem', 'tipo', 'stock', 'ultima_inventario', 'stock_ultima_inventario']
+
+    reports_utils.save_xlsx_consumption(
+        df_stock,
+        mask=mask,
+        labels=labels,
+        folder_path=folder_path,
+        file_name=file_name,
+        )
+
 def dump_full_dataset(db_connection, folder_path, file_name='full_dataset.xlsx'):
     df_movs = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
