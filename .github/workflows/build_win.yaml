@@ -30,7 +30,7 @@ jobs:
         run: pyinstaller --onefile stock_management/main.py
 
       - name: Archive EXE
-        run: Compress-Archive -Path $PWD/dist/main -DestinationPath stock_management.zip
+        run: Compress-Archive -Path $PWD\dist\main -DestinationPath stock_management.zip
 
       - name: Create artifact
         uses: actions/upload-artifact@v2
