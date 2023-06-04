@@ -33,7 +33,7 @@ jobs:
         run: ls -R
 
       - name: Archive EXE
-        run: Compress-Archive -Path $PWD\dist\main -DestinationPath stock_management.zip
+        run: Compress-Archive -Path $PWD\dist -DestinationPath stock_management.zip
 
       - name: Create artifact
         uses: actions/upload-artifact@v2
