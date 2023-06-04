@@ -199,76 +199,90 @@ def test_add_cum_stock_df(df_drugs,
         date(2023,1,1),
         date(3000,1,31),
         pd.DataFrame([
-            [1,10,2,8,date(1900,1,1)],
-            [2,10,2,8,date(1900,1,1)],
-            [3,10,2,19,date(2023,1,3)],
-            [4,10,1,9,date(1900,1,1)],
-            [5,10,2,8,date(1900,1,1)],
-            [6,10,11,0,date(1900,1,1)],
-            [7,10,11,20,date(2023,1,3)],
-            [8,10,1,9,date(1900,1,1)],
-            [9,10,6,4,date(1900,1,1)],
+            [1,10,2,8,date(1900,1,1),None],
+            [2,10,2,8,date(1900,1,1),None],
+            [3,10,2,19,date(2023,1,3),20.0],
+            [4,10,1,9,date(1900,1,1), None],
+            [5,10,2,8,date(1900,1,1), None],
+            [6,10,11,0,date(1900,1,1), None],
+            [7,10,11,20,date(2023,1,3), 20.0],
+            [8,10,1,9,date(1900,1,1),None],
+            [9,10,6,4,date(1900,1,1),None],
         ],
-        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
+        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date', 'last_inventory_stock'])
     ),
     (   # Take only the first 2 days
         date(2000,1,1),
         date(2023,1,2),
         pd.DataFrame([
-            [1,10,2,8,date(1900,1,1)],
-            [2,10,2,8,date(1900,1,1)],
-            [3,10,1,9,date(1900,1,1)],
-            [4,10,1,9,date(1900,1,1)],
-            [5,10,1,9,date(1900,1,1)],
-            [6,10,11,0,date(1900,1,1)],
-            [7,10,11,0,date(1900,1,1)],
-            [8,10,1,9,date(1900,1,1)],
-            [9,10,3,7,date(1900,1,1)],
+            [1,10,2,8,date(1900,1,1), None],
+            [2,10,2,8,date(1900,1,1), None],
+            [3,10,1,9,date(1900,1,1), None],
+            [4,10,1,9,date(1900,1,1), None],
+            [5,10,1,9,date(1900,1,1), None],
+            [6,10,11,0,date(1900,1,1), None],
+            [7,10,11,0,date(1900,1,1), None],
+            [8,10,1,9,date(1900,1,1), None],
+            [9,10,3,7,date(1900,1,1), None],
         ],
-        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
+        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date', 'last_inventory_stock'])
     ),
     (   # Take only the first month
         date(2000,1,1),
         date(2023,1,31),
         pd.DataFrame([
-            [1,10,2,8,date(1900,1,1)],
-            [2,10,2,8,date(1900,1,1)],
-            [3,10,2,19,date(2023,1,3)],
-            [4,10,1,9,date(1900,1,1)],
-            [5,10,1,9,date(1900,1,1)],
-            [6,10,11,0,date(1900,1,1)],
-            [7,10,11,20,date(2023,1,3)],
-            [8,10,1,9,date(1900,1,1)],
-            [9,10,6,4,date(1900,1,1)],
+            [1,10,2,8,date(1900,1,1), None],
+            [2,10,2,8,date(1900,1,1), None],
+            [3,10,2,19,date(2023,1,3), 20.0],
+            [4,10,1,9,date(1900,1,1), None],
+            [5,10,1,9,date(1900,1,1), None],
+            [6,10,11,0,date(1900,1,1), None],
+            [7,10,11,20,date(2023,1,3), 20.0],
+            [8,10,1,9,date(1900,1,1), None],
+            [9,10,6,4,date(1900,1,1), None],
         ],
-        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
+        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date','last_inventory_stock'])
     ),
     (   # Selected period with no entry
         date(2000,1,1),
         date(2000,1,2),
         pd.DataFrame([],
-        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
+        columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date','last_inventory_stock'])
     ),
 ])
-def test_compute_consumption_per_ID(db_connection, start_date, end_date, expected_consumption, store_xlsx=True, store_csv=False):
-    
+def test_compute_consumption_per_ID(db_connection,
+                                    start_date,
+                                    end_date,
+                                    expected_consumption,
+                                    store_xlsx=True,
+                                    store_csv=False):
+    groupby_cols = ['drug_id',]
+
     df_movs = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
-    cumulative_result = reports_utils.add_cum_stock_df(df_movs)
-    df_consumption_ID = reports_utils.compute_consumption_agg_drug(df_drugs,
-                                                                      cumulative_result,
-                                                                      start_date=start_date,
-                                                                      end_date=end_date,
-                                                                      groupby_cols=['drug_id'],
-                                                                      )
+   
+    # Compute cumlative results per group
+    cumulative_result = reports_utils.computed_cum_res(
+        df_drugs=df_drugs,
+        df_movs=df_movs,
+        groupby_cols=groupby_cols
+        )
+
+    # Compute consumption per group
+    df_consumption_ID = reports_utils.compute_consumption_group(
+        cumulative_result,
+        start_date=start_date,
+        end_date=end_date,
+        groupby_cols=groupby_cols,
+        )
    
     if store_xlsx:
-        path_to_csv = 'test_data/consumption_agg_per_ID.xlsx'
+        path_to_csv = 'test_data/tmp_consumption_agg_per_ID.xlsx'
         # Store in file for if mofidications are made to the database created for testing
         df_consumption_ID.to_excel(path_to_csv, index=False)
 
     if store_csv:
-        path_to_csv = 'test_data/consumption_agg_per_ID.csv'
+        path_to_csv = 'test_data/tmp_consumption_agg_per_ID.csv'
         # Store in file for if mofidications are made to the database created for testing
         df_consumption_ID.to_csv(path_to_csv, index=False)
  
@@ -276,85 +290,102 @@ def test_compute_consumption_per_ID(db_connection, start_date, end_date, expecte
 
     assert diff.empty
 
-
 @pytest.mark.parametrize("start_date, end_date, expected_consumption", [
     (   # Take all movements
         date(2023,1,1),
         date(3000,1,31),
         pd.DataFrame([
-            ['test_drug',1,10,2,8,date(1900,1,1)],
-            ['test_drug',10,10,2,8,date(1900,1,1)],
-            ['test_drug2',1,10,2,19,date(2023,1,3)],
-            ['test_drug3',1,10,1,9,date(1900,1,1)],
-            ['test_drug6',1,10,2,8,date(1900,1,1)],
-            ['test_drug7',1,10,11,0,date(1900,1,1)],
-            ['test_dru8',1,10,11,20,date(2023,1,3)],
-            ['test_drug9',1,10,1,9,date(1900,1,1)],
+            # name, dose, entry, exit, stock, last_inventory_date, last_inventory_stock
+            ['test_drug',1,20,3,17,date(1900,1,1), None],
+            ['test_drug',10,10,2,8,date(1900,1,1), None],
+            ['test_drug2',1,10,2,8,date(1900,1,1), None],
+            ['test_drug3',1,10,2,19,date(2023,1,3), 20],
+            ['test_drug6',1,10,11,0,date(1900,1,1), None],
+            ['test_drug7',1,10,11,20,date(2023,1,3), 20],
+            ['test_drug8',1,10,1,9,date(1900,1,1), None],
+            ['test_drug9',1,10,6,4,date(1900,1,1), None],
         ],
-        columns=['nome', 'dose', 'entry', 'exit', 'stock', 'last_inventory_date'])
+        columns=['name', 'dose', 'entry', 'exit', 'stock', 'last_inventory_date', 'last_inventory_stock'])
     ),
     (   # Take only the first 2 days
         date(2000,1,1),
         date(2023,1,2),
         pd.DataFrame([
-            ['test_drug',1,10,2,8,date(1900,1,1)],
-            ['test_drug',10,10,2,8,date(1900,1,1)],
-            ['test_drug2',1,10,1,9,date(1900,1,1)],
-            ['test_drug3',1,10,1,9,date(1900,1,1)],
-            ['test_drug6',1,10,1,9,date(1900,1,1)],
-            ['test_drug7',1,10,11,0,date(1900,1,1)],
-            ['test_drug8',1,10,11,0,date(1900,1,1)],
-            ['test_drug9',1,10,1,9,date(1900,1,1)],
+            # name, dose, entry, exit, stock, last_inventory_date, last_inventory_stock
+            ['test_drug',1,20,3,17,date(1900,1,1), None],
+            ['test_drug',10,10,1,9,date(1900,1,1), None],
+            ['test_drug2',1,10,2,8,date(1900,1,1), None],
+            ['test_drug3',1,10,1,9,date(1900,1,1), None],
+            ['test_drug6',1,10,11,0,date(1900,1,1), None],
+            ['test_drug7',1,10,11,0,date(1900,1,1), None],
+            ['test_drug8',1,10,1,9,date(1900,1,1), None],
+            ['test_drug9',1,10,3,7,date(1900,1,1), None],
         ],
-        columns=['nome', 'dose', 'entry', 'exit', 'stock', 'last_inventory_date'])
+        columns=['name', 'dose', 'entry', 'exit', 'stock', 'last_inventory_date', 'last_inventory_stock'])
     ),
     (   # Take only the first month
         date(2000,1,1),
         date(2023,1,31),
         pd.DataFrame([
-            ['test_drug',1,10,2,8,date(1900,1,1)],
-            ['test_drug',2,10,2,8,date(1900,1,1)],
-            ['test_drug2',3,10,2,19,date(2023,1,3)],
-            ['test_drug3',4,10,1,9,date(1900,1,1)],
-            ['test_drug4',5,10,1,9,date(1900,1,1)],
-            ['test_drug5',6,10,11,0,date(1900,1,1)],
-            ['test_drug6',7,10,11,20,date(2023,1,3)],
-            ['test_drug7',8,10,1,9,date(1900,1,1)],
-            ['test_drug8',9,10,6,4,date(1900,1,1)],
+            # name, dose, entry, exit, stock, last_inventory_date, last_inventory_stock
+            ['test_drug',1,20,3,17,date(1900,1,1), None],
+            ['test_drug',10,10,1,9,date(1900,1,1), None],
+            ['test_drug2',1,10,2,8,date(1900,1,1), None],
+            ['test_drug3',1,10,2,19,date(2023,1,3), 20],
+            ['test_drug6',1,10,11,0,date(1900,1,1), None],
+            ['test_drug7',1,10,11,20,date(2023,1,3), 20],
+            ['test_drug8',1,10,1,9,date(1900,1,1), None],
+            ['test_drug9',1,10,6,4,date(1900,1,1), None],
         ],
-        columns=['nome', 'dose', 'entry', 'exit', 'stock', 'last_inventory_date'])
+        columns=['name', 'dose', 'entry', 'exit', 'stock', 'last_inventory_date', 'last_inventory_stock'])
     ),
     (   # Selected period with no entry
         date(2000,1,1),
         date(2000,1,2),
         pd.DataFrame([],
-        columns=['nome', 'dose', 'entry', 'exit', 'stock', 'last_inventory_date'])
+        columns=['name', 'dose', 'entry', 'exit', 'stock', 'last_inventory_date', 'last_inventory_stock'])
     ),
 ])
-def test_compute_consumption_per_name_dose(db_connection, start_date, end_date, expected_consumption, store_xlsx=True, store_csv=False):
-    
+def test_compute_consumption_per_name_dose(db_connection,
+                                           start_date,
+                                           end_date,
+                                           expected_consumption,
+                                           store_xlsx=True,
+                                           store_csv=False):
+    # Specify groupby columns
+    groupby_cols = ['name', 'dose',]
+
     df_movs = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
-    cumulative_result = reports_utils.add_cum_stock_df(df_movs)
-    df_consumption_ID = reports_utils.compute_consumption_agg_drug(
-        df_drugs,
+
+    cumulative_result = reports_utils.computed_cum_res(
+        df_drugs=df_drugs,
+        df_movs=df_movs,
+        groupby_cols=groupby_cols
+        )
+    
+    df_consumption = reports_utils.compute_consumption_group(
         cumulative_result,
         start_date=start_date,
         end_date=end_date,
-        groupby_cols=['name','dose',],
+        groupby_cols=groupby_cols,
         )
-   
+
     if store_xlsx:
         path_to_csv = 'test_data/consumption_agg_per_name_dose.xlsx'
         # Store in file for if mofidications are made to the database created for testing
-        df_consumption_ID.to_excel(path_to_csv, index=False)
+        df_consumption.to_excel(path_to_csv, index=False)
 
     if store_csv:
         path_to_csv = 'test_data/consumption_agg_per_name_dose.csv'
         # Store in file for if mofidications are made to the database created for testing
-        df_consumption_ID.to_csv(path_to_csv, index=False)
- 
-    diff = df_consumption_ID.compare(expected_consumption)
+        df_consumption.to_csv(path_to_csv, index=False)
+
+    # TODO clean up. Some custom casting
+    df_consumption['dose'] = df_consumption['dose'].astype('int')
+    expected_consumption['dose'] = expected_consumption['dose'].astype('int')
+    
+    diff = df_consumption.compare(expected_consumption)
 
     assert diff.empty
 

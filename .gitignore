@@ -19,6 +19,4 @@ dist/
 
 *egg-info/*
 
-test_data/*
-
 reports/*
