@@ -46,23 +46,25 @@ def add_cum_stock_group(df):
         
     return df
 
-def add_cum_stock_df(df):
+def add_cum_stock_df(df, groupby_cols):
+
     # Group the DataFrame by a specific column(s)
-    grouped_df = df.groupby('drug_id')
+    grouped_df = df.groupby(groupby_cols)
     df['stock_after_movement'] = 0
     df['last_inventory_date'] = date(1900,1,1)
     
     # Iterate over each group and apply the custom function
     for group_name, group_df in grouped_df:
-
-        index  = group_df.index
+    
+        # Extract the indices for the group
+        indices  = group_df.index
         # Apply the custom function to the group
         group_df = add_cum_stock_group(group_df.copy())
 
         # Update the group in the original DataFrame with the computed values
-        df.loc[index, 'last_inventory_date'] = group_df.loc[index,'last_inventory_date']
-        df.loc[index, 'stock_after_movement'] = group_df.loc[index,'stock_after_movement']
-        df.loc[index, 'last_inventory_stock'] = group_df.loc[index,'last_inventory_stock']
+        df.loc[indices, 'last_inventory_date'] = group_df.loc[indices,'last_inventory_date']
+        df.loc[indices, 'stock_after_movement'] = group_df.loc[indices,'stock_after_movement']
+        df.loc[indices, 'last_inventory_stock'] = group_df.loc[indices,'last_inventory_stock']
 
     return df
 
@@ -155,7 +157,6 @@ def save_xlsx_agg_per_ID(
     df_drug.drop(columns=['last_inventory_date'], inplace=True)
 
     # Replace 
-
     df_merged = pd.merge(df_drug, df_consumption_ID, on='drug_id', how='outer')
 
     # Select columns to display
@@ -170,21 +171,27 @@ def save_xlsx_agg_per_ID(
     # Apply formatting to the file
     format_xlsx(df_merged, writer)
 
+    # Save the Excel file
+    writer.close()
 
-def compute_consumption_agg_drug_ID(
+
+def compute_consumption_agg_drug(
         df_drug,
         df_mov,
         start_date = date(1900,1,1),
         end_date = date(2100,1,1),
+        groupby_cols = ['drug_id',],
         ):
     
     # Init for safe exit
     df_out = pd.DataFrame([],columns=['drug_id', 'entry', 'exit', 'stock', 'last_inventory_date'])
 
     # The df_mov needs to have already the cumulative stock added
+    df_drug.reset_index(inplace=True)
+    df_drug.rename(columns={'id':'drug_id'}, inplace=True)
 
     df_drug.sort_values(by=['name'], inplace=True)
-    df_drug = df_drug[df_drug['current_stock'] > 0]
+    #df_drug = df_drug[df_drug['current_stock'] > 0]
 
     df_mov =df_mov[(df_mov['date_movement'] >= start_date) & (df_mov['date_movement'] <= end_date)]
     
@@ -196,33 +203,41 @@ def compute_consumption_agg_drug_ID(
     df_mov['entry'] = df_mov.apply(lambda x: x['pieces_moved'] if x['movement_type'] == 'entry' else 0, axis=1)
     df_mov['exit'] = df_mov.apply(lambda x: x['pieces_moved'] if x['movement_type'] == 'exit' else 0, axis=1)
 
-    # Compute total entry for groupby drug_id
-    df_mov_entry = df_mov.groupby('drug_id')['entry'].sum().reset_index()
+    # Extract the columns for merging
+    col_drug_in_merge = ['drug_id', 'name', 'dose', 'units', 'expiration', 'pieces_per_box', 'type', 'lote']
+
+    # Merge df_drug and df_mov
+    df_mov = pd.merge(df_drug.loc[:,col_drug_in_merge], df_mov, on='drug_id', how='left')
+
+    # Group dataset
+    df_mov_grouped = df_mov.groupby(groupby_cols)
+
+    # Compute total entry for group
+    df_mov_entry = df_mov_grouped['entry'].sum().reset_index()
     
-    # Compute total exit for groupby drug_id
-    df_mov_exit = df_mov.groupby('drug_id')['exit'].sum().reset_index()
+    # Compute total exit for group
+    df_mov_exit = df_mov_grouped['exit'].sum().reset_index()
 
     # Merge entry and exit
-    df_mov_agg = pd.merge(df_mov_entry, df_mov_exit, on='drug_id', how='outer')
+    df_mov_agg = pd.merge(df_mov_entry, df_mov_exit, on=groupby_cols, how='outer')
 
     # Extract stock after movement for the lastest date_movement
     df_mov_stock = pd.DataFrame()
-    #df_mov['date_movement'] = pd.to_datetime(df_mov['date_movement'])
 
-
-    latest_dates = df_mov.groupby('drug_id')['date_movement'].max()
-    df_mov_stock['stock'] = df_mov.groupby('drug_id').apply(lambda x: x.loc[x['date_movement'] == latest_dates.loc[x.name], 'stock_after_movement'].min())
+    # Extract the latest date_movement for each drug_id, and the corresponding stock_after_movement. 
+    # Take the min stock if there are multiple entries for the same date
+    latest_dates = df_mov_grouped['date_movement'].max()
+    # BUG This is wrong for aggregation different then drug_id!!!
+    df_mov_stock['stock'] = df_mov_grouped.apply(lambda x: x.loc[x['date_movement'] == latest_dates.loc[x.name], 'stock_after_movement'].min())
     
-    #df_mov_stock['stock'] = df_mov.groupby('drug_id').apply(lambda x: x.loc[x['date_movement'].idxmax(), 'stock_after_movement'])
-
     # Extract the date of latest available inventory for each drug_id
-    df_mov_date = df_mov.groupby('drug_id')['last_inventory_date'].last().reset_index()
+    df_mov_date = df_mov_grouped['last_inventory_date'].last().reset_index()
 
     # Merge the latest available stock and date
-    df_mov_stock_date = pd.merge(df_mov_stock, df_mov_date, on='drug_id', how='outer')
+    df_mov_stock_date = pd.merge(df_mov_stock, df_mov_date, on=groupby_cols, how='outer')
 
     # Merge the aggregated entry and exit with the latest available stock and date
-    df_out = pd.merge(df_mov_agg, df_mov_stock_date, on='drug_id', how='outer')
+    df_out = pd.merge(df_mov_agg, df_mov_stock_date, on=groupby_cols, how='outer')
 
     return df_out
 
@@ -285,5 +300,3 @@ def format_xlsx(df, writer):
     # Add the autofilter
     worksheet.autofilter(0, 0, max_row, max_col - 1)
 
-    # Save the Excel file
-    writer.close()
