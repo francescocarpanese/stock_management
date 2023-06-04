@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -30,7 +30,7 @@ jobs:
         run: pyinstaller --onefile stock_management/main.py
 
       - name: Archive EXE
-        run: zip stock_management.zip dist/main.exe
+        run: zip stock_management.zip dist/main
 
       - name: Create artifact
         uses: actions/upload-artifact@v2
