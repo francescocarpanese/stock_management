@@ -32,11 +32,18 @@ jobs:
       - name: List directory contents
         run: ls -R
 
-      #- name: Archive EXE
-      #  run: Compress-Archive -Path $PWD\dist -DestinationPath stock_management.zip
+      - name: Archive EXE
+        run: Compress-Archive -Path $PWD\dist -DestinationPath stock_management.zip
 
       - name: Create artifact
         uses: actions/upload-artifact@v2
         with:
           name: stock_management
-          path: $PWD\dist # asda
+          path: stock_management.zip
+
+      - name: Publish artifact
+        uses: actions/upload-release-asset@v1
+        with:
+          asset_path: ${{ github.workspace }}\stock_management.zip
+          asset_name: stock_management.zip
+          release_id: ${{ github.event.inputs.release_version }}
