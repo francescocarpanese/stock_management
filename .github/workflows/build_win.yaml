@@ -29,6 +29,9 @@ jobs:
       - name: Build EXE
         run: pyinstaller --onefile stock_management/main.py
 
+      - name: List directory contents
+      run: ls -R
+
       - name: Archive EXE
         run: Compress-Archive -Path $PWD\dist\main -DestinationPath stock_management.zip
 
