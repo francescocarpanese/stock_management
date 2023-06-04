@@ -32,11 +32,11 @@ jobs:
       - name: List directory contents
         run: ls -R
 
-      - name: Archive EXE
-        run: Compress-Archive -Path $PWD\dist -DestinationPath stock_management.zip
+      #- name: Archive EXE
+      #  run: Compress-Archive -Path $PWD\dist -DestinationPath stock_management.zip
 
       - name: Create artifact
         uses: actions/upload-artifact@v2
         with:
           name: stock_management
-          path: stock_management.zip
+          path: $PWD\dist # asda
