@@ -1,4 +1,4 @@
-name: Build EXE
+name: Build EXE WinOS
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
         run: pyinstaller --onefile stock_management/main.py
 
       - name: Archive EXE
-        run: zip stock_management.zip dist/main
+        run: Compress-Archive -Path dist/main -DestinationPath stock_management.zip
 
       - name: Create artifact
         uses: actions/upload-artifact@v2
