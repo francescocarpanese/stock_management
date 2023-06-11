@@ -21,3 +21,5 @@ tzdata==2023.3
 XlsxWriter==3.1.2
 black==23.3.0
 pre-commit==3.3.2
+coverage==7.2.7
+pytest-cov==4.1.0
