@@ -1,5 +1,10 @@
 import PySimpleGUI as sg
-from stock_management.layouts import get_main_layout, get_new_drug_layout, get_new_movement_layout, get_report_layout
+from stock_management.layouts import (
+    get_main_layout,
+    get_new_drug_layout,
+    get_new_movement_layout,
+    get_report_layout,
+)
 import stock_management.sql_utils as sql_utils
 
 layouts = [
@@ -10,7 +15,7 @@ layouts = [
 ]
 
 for lyt in layouts:
-    window = sg.Window('My GUI', lyt)
+    window = sg.Window("My GUI", lyt)
 
     while True:
         event, values = window.read()
