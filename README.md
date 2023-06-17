@@ -19,7 +19,7 @@ python -m pip install -e .
 
 Run the application
 ```bash
-python -m  python -m stock_management.main 
+python -m stock_management.main 
 ```
 
 # User
