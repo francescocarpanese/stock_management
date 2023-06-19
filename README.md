@@ -1,5 +1,8 @@
 # Simple GUI program for drug stock management
 
+# User guide
+A minimal user guide is available [here](https://github.com/francescocarpanese/stock_management/wiki).
+
 # Installation
 
 ## Developer
