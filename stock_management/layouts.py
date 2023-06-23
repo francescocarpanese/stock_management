@@ -1,3 +1,7 @@
+"""
+Layouts for the GUI
+"""
+
 import PySimpleGUI as sg
 
 font = ("Arial", 20)
@@ -94,12 +98,14 @@ def get_main_layout():
                 justification="left",
                 auto_size_columns=False,
                 num_rows=20,
+                alternating_row_color=sg.theme_button_color()[1],
+                selected_row_colors="red on yellow",
             )
         ],
         [
-            sg.Button("Nuovo movimento", key="-but_new_mov-", font=font),
-            sg.Button("Correccao farmaco", key="-but_correct_drug", font=font),
-            sg.Button("Nuovo Farmaco", key="-but_new_drug-", font=font),
+            sg.Button("Nuovo Movimento", key="-but_new_mov-", font=font),
+            sg.Button("Correccao Medicamento", key="-but_correct_drug", font=font),
+            sg.Button("Nuovo Medicamento", key="-but_new_drug-", font=font),
             sg.Button("Report", key="-but_report-", font=font),
         ],
     ]
