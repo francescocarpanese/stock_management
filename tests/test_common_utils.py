@@ -1,4 +1,8 @@
-from stock_management.common_utils import clear_string, parse_dose_units
+from stock_management.common_utils import (
+    clear_string,
+    parse_dose_units,
+    add_1k_separator,
+)
 import pytest
 
 
@@ -82,3 +86,17 @@ def test_clear_string(sin, sout):
 def test_parse_dose(input_string, expected_output):
     parsed = parse_dose_units(input_string)
     assert parsed == expected_output
+
+
+@pytest.mark.parametrize(
+    "input_str, expected_str",
+    [
+        ("1000", "1.000"),
+        ("100", "100"),
+        ("10000", "10.000"),
+        ("100000", "100.000"),
+    ],
+)
+def test_formatting_1k(input_str, expected_str):
+    output = add_1k_separator(input_str)
+    assert output == expected_str

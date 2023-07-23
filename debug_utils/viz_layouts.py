@@ -1,3 +1,5 @@
+# Visualize all the layouts to rapidly debug them
+
 import PySimpleGUI as sg
 from stock_management.layouts import (
     get_main_layout,

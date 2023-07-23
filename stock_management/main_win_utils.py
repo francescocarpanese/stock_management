@@ -1,5 +1,6 @@
 import sqlite3
 import stock_management.sql_utils as sql_utils
+from stock_management.common_utils import add_1k_separator
 
 
 def query_name_str(search_text):
@@ -85,7 +86,12 @@ def get_all_drugs(conn, window=None, event=None, values=None):
 
 
 def display_table(window, rows=[]):
-    table_viz = [row[1:] for row in rows]
+    # Former than last is the total stock.
+    # Format the string to add 1k separator.
+    # In portughese the 1k separator is the "."
+    # TODO, make explicit format for each row
+    table_viz = [row[1:-2] + (add_1k_separator(str(row[-2])),) for row in rows]
+
     window["-list_table-"].update(values=table_viz)
 
 

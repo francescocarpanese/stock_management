@@ -266,3 +266,14 @@ def clear_string(s):
     s = s.strip()
 
     return s
+
+
+def add_1k_separator(number):
+    """
+    Format a string containing and unsigned integer adding 1k separator
+    Currently assume portughese language, where 1k separator is "."
+    """
+    out = number
+    if len(number) > 3:
+        out = number[:-3] + "." + number[-3:]
+    return out
