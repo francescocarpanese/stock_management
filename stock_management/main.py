@@ -10,6 +10,7 @@ import stock_management.main_win_utils as main_win_utils
 import stock_management.drugs_win_utils as drugs_win_utils
 import stock_management.movement_win_utils as movement_win_utils
 import stock_management.report_win_utils as report_win_utils
+import stock_management.test_win_utils as test_win_utils
 import os
 from stock_management.create_tables import create_all_tables
 
@@ -64,6 +65,9 @@ while True:
             main_win_utils.display_table(window, rows)
     elif event == "-but_report-":
         report_win_utils.report_session(conn)
+
+    elif event == "-but_test-":
+        test_win_utils.test_session()
 
     if values["-in_name-"] == "":
         rows = main_win_utils.search_drug(conn, window, event, values)

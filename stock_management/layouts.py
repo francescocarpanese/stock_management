@@ -107,6 +107,7 @@ def get_main_layout():
             sg.Button("Correccao Medicamento", key="-but_correct_drug", font=font),
             sg.Button("Nuovo Medicamento", key="-but_new_drug-", font=font),
             sg.Button("Report", key="-but_report-", font=font),
+            sg.Button("Test", key="-but_test-", font=font),
         ],
     ]
     return layout
@@ -218,5 +219,27 @@ def get_report_layout():
                 "", key="-txt_link_folder-", size=(20, 1), enable_events=True, font=font
             ),
         ],
+    ]
+    return layout
+
+def get_test_layout():
+    layout = [
+        [
+
+            sg.Text('Test Window')
+
+        ],
+        [
+
+            sg.Text('Enter something:'),
+            sg.InputText()
+
+        ],
+        [
+
+            sg.Button('Ok', key='-but_confirm_test-', font=font),
+            sg.Button('Cancel', key='-but_exit_test-', font=font)
+
+        ]
     ]
     return layout
