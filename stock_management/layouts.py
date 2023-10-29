@@ -222,24 +222,17 @@ def get_report_layout():
     ]
     return layout
 
+
 def get_test_layout():
     layout = [
+        [sg.Text("Test Window")],
         [
-
-            sg.Text('Test Window')
-
+            sg.Text("Enter something:"),
+            sg.InputText("", key="-input_test_tmp_win-"),
         ],
         [
-
-            sg.Text('Enter something:'),
-            sg.InputText()
-
+            sg.Button("Ok", key="-but_confirm_test-", font=font),
+            sg.Button("Cancel", key="-but_exit_test-", font=font),
         ],
-        [
-
-            sg.Button('Ok', key='-but_confirm_test-', font=font),
-            sg.Button('Cancel', key='-but_exit_test-', font=font)
-
-        ]
     ]
     return layout
