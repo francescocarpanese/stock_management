@@ -1,12 +1,16 @@
 from stock_management.layouts import get_test_layout
-from stock_management.__init__ import Session, Status
+from stock_management.__init__ import Session, Status, SessionType
 import PySimpleGUI as sg
 import time
 
 class TestSession(Session):
     
-    def __init__(self):
+    def __init__(self, test_events, test_args, session_type):
         self.status = Status.INITIALIZING
+
+        self.test_events = test_events
+        self.test_args = test_args
+        self.session_type = session_type
 
         self.layout = get_test_layout()
         self.window = sg.Window("Test", self.layout)
@@ -14,7 +18,7 @@ class TestSession(Session):
 
         self.tstat = time.time()
 
-    def Run(self, test_events, test_args, timeout):
+    def Run(self, timeout):
         self.status = Status.RUNNING
 
         while True:
@@ -33,7 +37,8 @@ class TestSession(Session):
                 if time.time() - self.tstat > timeout:
                     break
 
-            self.RunTests(test_events, test_args)
+            if self.session_type == SessionType.TEST:
+                self.RunTests(event, values)
 
     def __del__(self):
         self.status = Status.FINISHED
@@ -43,7 +48,8 @@ def test_session(
     test_events=[],
     test_args=[],
     timeout=None,
+    session_type=SessionType.MAIN,
 ):
-    testSession = TestSession()
-    testSession.Run(test_events, test_args, timeout)
+    testSession = TestSession(test_events, test_args, session_type)
+    testSession.Run(timeout)
     del testSession

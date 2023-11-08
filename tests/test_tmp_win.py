@@ -1,7 +1,7 @@
 import stock_management.tmp_win_utils as tmp_win_utils
+from stock_management.__init__ import SessionType
 import time
 import sys
-
 
 # This test check that if the "confirm" button is triggered, the message "exit win Test" is printed on the terminal
 def test_click_confirm_button(capsys):
@@ -13,6 +13,7 @@ def test_click_confirm_button(capsys):
             [],
         ],
         timeout=1,
+        session_type=tmp_win_utils.SessionType.TEST
     )
 
     captured = capsys.readouterr()
@@ -21,7 +22,7 @@ def test_click_confirm_button(capsys):
 
 
 # Test that if  "pippo" is written and  "ok" is clicked, the program write "you pressed pippo" in the terminal
-def test_click_confirm_button(capsys):
+def test_click_fill_and_confirm_button(capsys):
     # Test to write on the Input widget
     entry_txt = "pippo"
 
@@ -34,6 +35,7 @@ def test_click_confirm_button(capsys):
             entry_txt,
         ],
         timeout=1,
+        session_type=tmp_win_utils.SessionType.TEST
     )
 
     # Get the stdout, and check that the program wrote the expected message in the print

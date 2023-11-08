@@ -6,9 +6,13 @@ class Status(Enum):
     RUNNING = 2,
     FINISHED = 3
 
+class SessionType(Enum):
+    MAIN = 1,
+    TEST = 2
+
 class Session:
     @abstractmethod
-    def __init__(self):
+    def __init__(self, test_events, test_args, session_type):
         pass
 
     @abstractmethod
@@ -20,8 +24,8 @@ class Session:
         pass
 
     def RunTests(self,
-        test_events=[],
-        test_args=[]
+        event=None,
+        values=None,
     ):
-        for ev, arg in zip(test_events, test_args):
-            ev(window, event, values, arg)
+        for ev, arg in zip(self.test_events, self.test_args):
+            ev(self.window, event, values, arg)
