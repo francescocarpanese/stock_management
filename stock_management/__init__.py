@@ -16,7 +16,6 @@ class Session:
         self.layout = layout_fun()
         self.window = sg.Window(win_name, self.layout)
         self.window.finalize()
-        self.tstat = time.time()
 
     def run(
         self,
@@ -24,6 +23,7 @@ class Session:
         test_events=[],
         test_args=[],
     ):
+        self.tstat = time.time()
         self.status = Status.RUNNING
 
         while True:
