@@ -69,7 +69,7 @@ while True:
 
     elif event == "-but_test-":
         session = tmp_win_utils.TestSession(layout_fun=get_test_layout, win_name="Test")
-        session.Run()
+        session.run()
 
     if values["-in_name-"] == "":
         rows = main_win_utils.search_drug(conn, window, event, values)
