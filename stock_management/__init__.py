@@ -5,8 +5,8 @@ import PySimpleGUI as sg
 
 
 class Status(Enum):
-    INITIALIZED = (1,)
-    RUNNING = (2,)
+    INITIALIZED = 1
+    RUNNING = 2
     FINISHED = 3
 
 
@@ -18,7 +18,7 @@ class Session:
         self.window.finalize()
         self.tstat = time.time()
 
-    def Run(
+    def run(
         self,
         timeout=None,
         test_events=[],
@@ -30,7 +30,7 @@ class Session:
             event, values = self.window.read(timeout=100)
 
             # Perform event actions
-            self.Events(event, values)
+            self.act_on_event(event, values)
 
             # Running externally triggered events for test purposes
             for ev, arg in zip(test_events, test_args):
@@ -45,15 +45,15 @@ class Session:
                 break
 
         # Close the window and end status
-        self.End()
+        self.end()
 
     @abstractmethod
-    def Events(event, values):
+    def act_on_event(event, values):
         pass
 
-    def End(self):
+    def end(self):
         self.status = Status.FINISHED
         self.window.close()
 
     def __del__(self):
-        self.End()
+        self.end()

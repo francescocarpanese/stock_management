@@ -4,7 +4,7 @@ import time
 
 
 class TestSession(Session):
-    def Events(self, event, values):
+    def act_on_event(self, event, values):
         if event == sg.WIN_CLOSED:
             self.status = Status.FINISHED
         elif event == "-but_exit_test-":

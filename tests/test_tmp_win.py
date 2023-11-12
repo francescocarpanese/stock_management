@@ -1,6 +1,4 @@
-import stock_management.tmp_win_utils as tmp_win_utils
 import time
-import sys
 from stock_management.tmp_win_utils import TestSession
 from stock_management.layouts import get_test_layout
 
@@ -11,7 +9,7 @@ def test_click_confirm_button(capsys):
     se = TestSession(layout_fun=get_test_layout, win_name="Test")
 
     # Run session
-    se.Run(
+    se.run(
         test_events=[
             event_cancel,
         ],
@@ -34,7 +32,7 @@ def test_click_fill_and_confirm_button(capsys):
     entry_txt = "pippo"
 
     # Create window, trigger the event fill_and_ok, write pippo and click ok. See the event "fill_and_ok" utility
-    se.Run(
+    se.run(
         test_events=[
             fill_and_ok,
         ],
