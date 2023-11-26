@@ -3,6 +3,7 @@ from stock_management.layouts import (
     get_main_layout,
     get_new_drug_layout,
     get_new_movement_layout,
+    get_test_layout,
 )
 import sqlite3
 import stock_management.sql_utils as sql_utils
@@ -67,7 +68,8 @@ while True:
         report_win_utils.report_session(conn)
 
     elif event == "-but_test-":
-        tmp_win_utils.test_session()
+        session = tmp_win_utils.TestSession(layout_fun=get_test_layout, win_name="Test")
+        session.run()
 
     if values["-in_name-"] == "":
         rows = main_win_utils.search_drug(conn, window, event, values)

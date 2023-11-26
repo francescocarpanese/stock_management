@@ -1,31 +1,59 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+import time
+import PySimpleGUI as sg
+
 
 class Status(Enum):
-    INITIALIZING = 1,
-    RUNNING = 2,
+    INITIALIZED = 1
+    RUNNING = 2
     FINISHED = 3
 
-class SessionType(Enum):
-    MAIN = 1,
-    TEST = 2
 
 class Session:
-    @abstractmethod
-    def __init__(self, test_events, test_args, session_type):
-        pass
+    def __init__(self, layout_fun, win_name):
+        self.status = Status.INITIALIZED
+        self.layout = layout_fun()
+        self.window = sg.Window(win_name, self.layout)
+        self.window.finalize()
 
-    @abstractmethod
-    def Run(self):
-        pass
-
-    @abstractmethod
-    def __del__(self):
-        pass
-
-    def RunTests(self,
-        event=None,
-        values=None,
+    def run(
+        self,
+        timeout=None,
+        test_events=[],
+        test_args=[],
     ):
-        for ev, arg in zip(self.test_events, self.test_args):
-            ev(self.window, event, values, arg)
+        self.tstat = time.time()
+        self.status = Status.RUNNING
+
+        while True:
+            event, values = self.window.read(timeout=100)
+
+            # Perform event actions
+            self.act_on_event(event, values)
+
+            # Running externally triggered events for test purposes
+            for ev, arg in zip(test_events, test_args):
+                ev(self.window, event, values, arg)
+
+            if timeout:
+                if time.time() - self.tstat > timeout:
+                    self.status = Status.FINISHED
+
+            # Break the loop when end is triggered
+            if self.status == Status.FINISHED:
+                break
+
+        # Close the window and end status
+        self.end()
+
+    @abstractmethod
+    def act_on_event(event, values):
+        pass
+
+    def end(self):
+        self.status = Status.FINISHED
+        self.window.close()
+
+    def __del__(self):
+        self.end()
