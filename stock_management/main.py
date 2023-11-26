@@ -3,6 +3,7 @@ from stock_management.layouts import (
     get_main_layout,
     get_new_drug_layout,
     get_new_movement_layout,
+    get_test_layout,
 )
 import sqlite3
 import stock_management.sql_utils as sql_utils
@@ -10,6 +11,7 @@ import stock_management.main_win_utils as main_win_utils
 import stock_management.drugs_win_utils as drugs_win_utils
 import stock_management.movement_win_utils as movement_win_utils
 import stock_management.report_win_utils as report_win_utils
+import stock_management.tmp_win_utils as tmp_win_utils
 import os
 from stock_management.create_tables import create_all_tables
 
@@ -64,6 +66,10 @@ while True:
             main_win_utils.display_table(window, rows)
     elif event == "-but_report-":
         report_win_utils.report_session(conn)
+
+    elif event == "-but_test-":
+        session = tmp_win_utils.TestSession(layout_fun=get_test_layout, win_name="Test")
+        session.run()
 
     if values["-in_name-"] == "":
         rows = main_win_utils.search_drug(conn, window, event, values)
