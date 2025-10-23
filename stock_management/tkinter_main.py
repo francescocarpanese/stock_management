@@ -15,6 +15,18 @@ import stock_management.tkinter_movement_win_utils as movement_win_utils
 import stock_management.tkinter_report_win_utils as report_win_utils
 from stock_management.tkinter_layouts import NewDrugWindow, NewMovementWindow, ReportWindow
 
+# Increased font sizes for better readability
+FONT_SIZE = 16
+FONT = ("Arial", FONT_SIZE)
+FONT_LABEL = ("Arial", FONT_SIZE, "bold")
+FONT_BUTTON = ("Arial", 15, "bold")
+
+# Button colors for main window
+COLOR_NEW_MOVEMENT = "#FF9800"  # Orange
+COLOR_CORRECT_DRUG = "#9C27B0"  # Purple
+COLOR_NEW_DRUG = "#4CAF50"      # Green
+COLOR_REPORT = "#2196F3"        # Blue
+
 
 class StockManagementApp:
     """Main application window"""
@@ -50,18 +62,22 @@ class StockManagementApp:
         top_frame.pack(fill=tk.X)
         
         # Nome search
-        ttk.Label(top_frame, text="Nome:", font=("Arial", 12, "bold")).pack(side=tk.LEFT, padx=5)
-        self.in_name = ttk.Entry(top_frame, font=("Arial", 12), width=20)
+        ttk.Label(top_frame, text="Nome:", font=FONT_LABEL).pack(side=tk.LEFT, padx=5)
+        self.in_name = ttk.Entry(top_frame, font=FONT, width=20)
         self.in_name.pack(side=tk.LEFT, padx=5)
         self.in_name.bind("<KeyRelease>", self._on_search_changed)
         
-        # Checkboxes
+        # Checkboxes - using custom style for larger font
+        checkbox_style = ttk.Style()
+        checkbox_style.configure("Custom.TCheckbutton", font=FONT)
+        
         self.chx_expired_var = tk.BooleanVar(value=True)
         self.chx_expired = ttk.Checkbutton(
             top_frame,
             text="Expirado",
             variable=self.chx_expired_var,
-            command=self._on_filter_changed
+            command=self._on_filter_changed,
+            style="Custom.TCheckbutton"
         )
         self.chx_expired.pack(side=tk.LEFT, padx=5)
         
@@ -70,7 +86,8 @@ class StockManagementApp:
             top_frame,
             text="Esgotados",
             variable=self.chx_out_stock_var,
-            command=self._on_filter_changed
+            command=self._on_filter_changed,
+            style="Custom.TCheckbutton"
         )
         self.chx_out_stock.pack(side=tk.LEFT, padx=5)
         
@@ -79,7 +96,8 @@ class StockManagementApp:
             top_frame,
             text="Presente",
             variable=self.chx_present_var,
-            command=self._on_filter_changed
+            command=self._on_filter_changed,
+            style="Custom.TCheckbutton"
         )
         self.chx_present.pack(side=tk.LEFT, padx=5)
         
@@ -87,9 +105,17 @@ class StockManagementApp:
         table_frame = ttk.Frame(self.root, padding="10")
         table_frame.pack(fill=tk.BOTH, expand=True)
         
+        # Configure table style with larger font
+        table_style = ttk.Style()
+        table_style.configure("Custom.Treeview", 
+                             font=FONT,
+                             rowheight=30)  # Increased row height for larger font
+        table_style.configure("Custom.Treeview.Heading", 
+                             font=FONT_LABEL)
+        
         # Create treeview (table)
         columns = ("Nome", "Dosagem", "Units", "Expiracao", "Pecas por caixa", "Forma", "Lote", "Stock presente")
-        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=20)
+        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=20, style="Custom.Treeview")
         
         # Define column headings and widths
         col_widths = [200, 80, 50, 100, 120, 100, 100, 120]
@@ -118,31 +144,59 @@ class StockManagementApp:
         buttons_frame = ttk.Frame(self.root, padding="10")
         buttons_frame.pack(fill=tk.X)
         
-        self.but_new_mov = ttk.Button(
+        self.but_new_mov = tk.Button(
             buttons_frame,
             text="Nuovo Movimento",
-            command=self._on_new_movement
+            command=self._on_new_movement,
+            bg=COLOR_NEW_MOVEMENT,
+            fg="white",
+            font=FONT_BUTTON,
+            padx=20,
+            pady=12,
+            relief=tk.RAISED,
+            cursor="hand2"
         )
         self.but_new_mov.pack(side=tk.LEFT, padx=5)
         
-        self.but_correct_drug = ttk.Button(
+        self.but_correct_drug = tk.Button(
             buttons_frame,
             text="Correccao Medicamento",
-            command=self._on_correct_drug
+            command=self._on_correct_drug,
+            bg=COLOR_CORRECT_DRUG,
+            fg="white",
+            font=FONT_BUTTON,
+            padx=20,
+            pady=12,
+            relief=tk.RAISED,
+            cursor="hand2"
         )
         self.but_correct_drug.pack(side=tk.LEFT, padx=5)
         
-        self.but_new_drug = ttk.Button(
+        self.but_new_drug = tk.Button(
             buttons_frame,
             text="Nuovo Medicamento",
-            command=self._on_new_drug
+            command=self._on_new_drug,
+            bg=COLOR_NEW_DRUG,
+            fg="white",
+            font=FONT_BUTTON,
+            padx=20,
+            pady=12,
+            relief=tk.RAISED,
+            cursor="hand2"
         )
         self.but_new_drug.pack(side=tk.LEFT, padx=5)
         
-        self.but_report = ttk.Button(
+        self.but_report = tk.Button(
             buttons_frame,
             text="Report",
-            command=self._on_report
+            command=self._on_report,
+            bg=COLOR_REPORT,
+            fg="white",
+            font=FONT_BUTTON,
+            padx=20,
+            pady=12,
+            relief=tk.RAISED,
+            cursor="hand2"
         )
         self.but_report.pack(side=tk.LEFT, padx=5)
     

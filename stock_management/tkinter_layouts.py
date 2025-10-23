@@ -7,9 +7,48 @@ from tkinter import ttk
 from tkcalendar import DateEntry
 from datetime import date
 
-FONT_SIZE = 12
+# Increased font sizes for better readability
+FONT_SIZE = 16
 FONT = ("Arial", FONT_SIZE)
 FONT_LABEL = ("Arial", FONT_SIZE, "bold")
+FONT_BUTTON = ("Arial", 15, "bold")
+
+# Button colors
+COLOR_SAVE = "#4CAF50"  # Green
+COLOR_EXIT = "#f44336"  # Red
+COLOR_GENERATE = "#2196F3"  # Blue
+
+
+def configure_button_styles():
+    """Configure custom button styles"""
+    style = ttk.Style()
+    
+    # Save button style (green)
+    style.configure("Save.TButton",
+                   background=COLOR_SAVE,
+                   foreground="white",
+                   font=FONT_BUTTON,
+                   padding=10)
+    style.map("Save.TButton",
+             background=[("active", "#45a049")])
+    
+    # Exit button style (red)
+    style.configure("Exit.TButton",
+                   background=COLOR_EXIT,
+                   foreground="white",
+                   font=FONT_BUTTON,
+                   padding=10)
+    style.map("Exit.TButton",
+             background=[("active", "#da190b")])
+    
+    # Generate button style (blue)
+    style.configure("Generate.TButton",
+                   background=COLOR_GENERATE,
+                   foreground="white",
+                   font=FONT_BUTTON,
+                   padding=10)
+    style.map("Generate.TButton",
+             background=[("active", "#0b7dda")])
 
 
 class NewDrugWindow(tk.Toplevel):
@@ -21,6 +60,9 @@ class NewDrugWindow(tk.Toplevel):
         self.result = None
         self.drug = drug
         self.values = None  # Store values before destroying window
+        
+        # Configure styles
+        configure_button_styles()
         
         # Create widgets
         self._create_widgets()
@@ -114,9 +156,31 @@ class NewDrugWindow(tk.Toplevel):
         # Buttons
         frame_buttons = ttk.Frame(self, padding="10")
         frame_buttons.pack(fill=tk.X)
-        self.but_save = ttk.Button(frame_buttons, text="Guarda", command=self._on_save)
+        self.but_save = tk.Button(
+            frame_buttons, 
+            text="Guarda", 
+            command=self._on_save,
+            bg=COLOR_SAVE,
+            fg="white",
+            font=FONT_BUTTON,
+            padx=20,
+            pady=10,
+            relief=tk.RAISED,
+            cursor="hand2"
+        )
         self.but_save.pack(side=tk.LEFT, padx=5)
-        self.but_exit = ttk.Button(frame_buttons, text="Fecha", command=self._on_exit)
+        self.but_exit = tk.Button(
+            frame_buttons, 
+            text="Fecha", 
+            command=self._on_exit,
+            bg=COLOR_EXIT,
+            fg="white",
+            font=FONT_BUTTON,
+            padx=20,
+            pady=10,
+            relief=tk.RAISED,
+            cursor="hand2"
+        )
         self.but_exit.pack(side=tk.LEFT, padx=5)
     
     def _fill_drug_data(self, drug):
@@ -174,6 +238,9 @@ class NewMovementWindow(tk.Toplevel):
         self.drug = drug
         self.movement = movement
         self.values = None  # Store values before destroying window
+        
+        # Configure styles
+        configure_button_styles()
         
         # Create widgets
         self._create_widgets()
@@ -305,9 +372,31 @@ class NewMovementWindow(tk.Toplevel):
         # Buttons
         frame_buttons = ttk.Frame(frame_movement)
         frame_buttons.pack(fill=tk.X, pady=10)
-        self.but_save = ttk.Button(frame_buttons, text="Guarda", command=self._on_save)
+        self.but_save = tk.Button(
+            frame_buttons, 
+            text="Guarda", 
+            command=self._on_save,
+            bg=COLOR_SAVE,
+            fg="white",
+            font=FONT_BUTTON,
+            padx=20,
+            pady=10,
+            relief=tk.RAISED,
+            cursor="hand2"
+        )
         self.but_save.pack(side=tk.LEFT, padx=5)
-        self.but_exit = ttk.Button(frame_buttons, text="Fecha", command=self._on_exit)
+        self.but_exit = tk.Button(
+            frame_buttons, 
+            text="Fecha", 
+            command=self._on_exit,
+            bg=COLOR_EXIT,
+            fg="white",
+            font=FONT_BUTTON,
+            padx=20,
+            pady=10,
+            relief=tk.RAISED,
+            cursor="hand2"
+        )
         self.but_exit.pack(side=tk.LEFT, padx=5)
         
         # Separator
@@ -397,6 +486,9 @@ class ReportWindow(tk.Toplevel):
         self.result = None
         self.report_folder = None
         
+        # Configure styles
+        configure_button_styles()
+        
         # Create widgets
         self._create_widgets()
         
@@ -460,7 +552,18 @@ class ReportWindow(tk.Toplevel):
         # Generate button
         frame_gen = ttk.Frame(self, padding="10")
         frame_gen.pack(fill=tk.X)
-        self.but_generate = ttk.Button(frame_gen, text="Generate", command=self._on_generate)
+        self.but_generate = tk.Button(
+            frame_gen, 
+            text="Generate", 
+            command=self._on_generate,
+            bg=COLOR_GENERATE,
+            fg="white",
+            font=FONT_BUTTON,
+            padx=20,
+            pady=10,
+            relief=tk.RAISED,
+            cursor="hand2"
+        )
         self.but_generate.pack(side=tk.LEFT, padx=5)
         
         # Link to folder
