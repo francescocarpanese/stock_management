@@ -7,29 +7,17 @@ A minimal user guide is available [here](https://github.com/francescocarpanese/s
 
 ## Developer
 
-Requires Python 3.10 or higher
+- Install `uv` [here](https://docs.astral.sh/uv/)
 
-If using miniconda
+- On pull the repo
+
+- Install it
 ```bash
-conda create -n stock_management python=3.10
-conda activate stock_management
+cd stock_management
+uv sync
 ```
 
-Install in editable mode
+- Run the application
 ```bash
-python -m pip install -e . 
+uv run stock_management/tkinter_main.py
 ```
-
-Run the application
-```bash
-python -m stock_management.main 
-```
-
-# User
-
-The application is distributed together with `.exe` compiled for Windows 10/11.
-This is a standalone executable, no installation is required.
-
-
-
-
