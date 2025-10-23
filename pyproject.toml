@@ -1,0 +1,82 @@
+[project]
+name = "stock-management"
+version = "1.0.0"
+description = "GUI application for hospital drug stock management"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Francesco Carpanese"}
+]
+
+dependencies = [
+    "numpy>=1.24.3",
+    "openpyxl>=3.1.2",
+    "pandas>=2.0.1",
+    "tkcalendar>=1.6.1",
+    "python-dateutil>=2.8.2",
+    "tabulate>=0.9.0",
+    "xlsxwriter>=3.1.2",
+]
+
+[project.scripts]
+stock-management = "stock_management.tkinter_main:main"
+stock-management-psg = "stock_management.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.3.1",
+    "pytest-cov>=4.1.0",
+    "black>=23.3.0",
+    "pre-commit>=3.3.2",
+    "coverage>=7.2.7",
+]
+
+[tool.uv.sources]
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["stock_management"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

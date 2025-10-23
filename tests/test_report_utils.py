@@ -4,7 +4,7 @@ from stock_management.create_tables import create_all_tables
 import os
 import sqlite3
 from datetime import date, datetime
-from stock_management.movement_win_utils import update_stock
+from stock_management.tkinter_movement_win_utils import update_stock
 import stock_management.reports_utils as reports_utils
 import pandas as pd
 
