@@ -411,6 +411,16 @@ class ReportWindow(tk.Toplevel):
         self.geometry(f"+{x}+{y}")
     
     def _create_widgets(self):
+        # Calculate default dates: start of previous month to today
+        today = date.today()
+        # Get first day of current month, then go back one day to get last day of previous month
+        first_day_this_month = today.replace(day=1)
+        # Calculate first day of previous month
+        if first_day_this_month.month == 1:
+            start_date = first_day_this_month.replace(year=first_day_this_month.year - 1, month=12)
+        else:
+            start_date = first_day_this_month.replace(month=first_day_this_month.month - 1)
+        
         # Data do inicio
         frame_start = ttk.Frame(self, padding="10")
         frame_start.pack(fill=tk.X)
@@ -422,9 +432,9 @@ class ReportWindow(tk.Toplevel):
             background='darkblue',
             foreground='white',
             borderwidth=2,
-            year=2023,
-            month=1,
-            day=1,
+            year=start_date.year,
+            month=start_date.month,
+            day=start_date.day,
             date_pattern='yyyy-mm-dd'
         )
         self.in_data_start.pack(side=tk.LEFT, padx=5)
@@ -440,9 +450,9 @@ class ReportWindow(tk.Toplevel):
             background='darkblue',
             foreground='white',
             borderwidth=2,
-            year=2023,
-            month=1,
-            day=1,
+            year=today.year,
+            month=today.month,
+            day=today.day,
             date_pattern='yyyy-mm-dd'
         )
         self.in_data_end.pack(side=tk.LEFT, padx=5)
