@@ -21,3 +21,8 @@ uv sync
 ```bash
 uv run stock_management/tkinter_main.py
 ```
+
+- Web version 
+```bash
+uv run stock-management-web
+```
