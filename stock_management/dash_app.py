@@ -592,10 +592,11 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
         success = drugs_win_utils.save_drug(values, conn, id=drug_id_edit)
         conn.close()
         
+        today = date.today()
         if success:
             alert = dbc.Alert("Medicamento guardado com sucesso!", color="success", duration=3000)
             # Reset form fields and trigger table refresh
-            return (alert, '', '', '', date.today(), 0, '', '', None, {'timestamp': date.today().isoformat()})
+            return (alert, '', '', '', today, 0, '', '', None, {'timestamp': today.isoformat()})
         else:
             alert = dbc.Alert("Erro ao guardar medicamento. Verifique os campos.", color="danger", duration=3000)
             return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None)
@@ -679,7 +680,14 @@ def update_movement_total(boxes, pieces, drug_id):
 
 
 @callback(
-    Output('movement-modal-alert', 'children'),
+    [Output('movement-modal-alert', 'children'),
+     Output('movement-date', 'date'),
+     Output('movement-origin', 'value'),
+     Output('movement-boxes', 'value'),
+     Output('movement-pieces', 'value'),
+     Output('movement-type', 'value'),
+     Output('movement-signature', 'value'),
+     Output('refresh-table-trigger', 'data', allow_duplicate=True)],
     Input('save-movement-btn', 'n_clicks'),
     [State('movement-date', 'date'),
      State('movement-origin', 'value'),
@@ -691,9 +699,9 @@ def update_movement_total(boxes, pieces, drug_id):
     prevent_initial_call=True
 )
 def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature, drug_id):
-    """Save movement to database"""
+    """Save movement to database, clear form, and refresh table"""
     if not n_clicks or not drug_id:
-        return None
+        return None, mov_date, origin, boxes, pieces, mov_type, signature, None
     
     values = {
         'in_data_movido': mov_date,
@@ -711,10 +719,14 @@ def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature
     success = movement_win_utils.save_move(values, conn, drug, None)
     conn.close()
     
+    today = date.today()
     if success:
-        return dbc.Alert("Movimento guardado com sucesso!", color="success", duration=3000)
+        alert = dbc.Alert("Movimento guardado com sucesso!", color="success", duration=3000)
+        # Clear form fields and trigger table refresh
+        return (alert, today, '', 0, 0, '', '', {'timestamp': today.isoformat()})
     else:
-        return dbc.Alert("Erro ao guardar movimento. Verifique os campos.", color="danger", duration=3000)
+        alert = dbc.Alert("Erro ao guardar movimento. Verifique os campos.", color="danger", duration=3000)
+        return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None)
 
 
 # Report Modal callbacks
