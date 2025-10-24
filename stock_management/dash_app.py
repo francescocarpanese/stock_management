@@ -400,6 +400,7 @@ def create_report_modal():
 app.layout = dbc.Container([
     dcc.Store(id='selected-drug-id'),
     dcc.Store(id='current-drug-for-edit'),
+    dcc.Store(id='refresh-table-trigger'),
     
     create_navbar(),
     
@@ -422,10 +423,9 @@ app.layout = dbc.Container([
      Input('filter-expired', 'value'),
      Input('filter-out-stock', 'value'),
      Input('filter-present', 'value'),
-     Input('save-drug-btn', 'n_clicks'),
-     Input('save-movement-btn', 'n_clicks')]
+     Input('refresh-table-trigger', 'data')]
 )
-def update_table(search_text, expired, out_stock, present, drug_save, mov_save):
+def update_table(search_text, expired, out_stock, present, refresh_trigger):
     """Update the drugs table based on filters"""
     conn = get_db_connection()
     
@@ -523,43 +523,18 @@ def toggle_drug_modal(n_new, n_correct, n_close, n_save, is_open, selected_id):
 
 
 @callback(
-    [Output('drug-name', 'value'),
+    [Output('drug-modal-alert', 'children'),
+     Output('drug-name', 'value'),
      Output('drug-dose', 'value'),
      Output('drug-units', 'value'),
      Output('drug-expiration', 'date'),
      Output('drug-pieces-per-box', 'value'),
      Output('drug-form', 'value'),
      Output('drug-lote', 'value'),
-     Output('current-drug-for-edit', 'data')],
-    Input('btn-correct-drug', 'n_clicks'),
-    State('selected-drug-id', 'data'),
-    prevent_initial_call=True
-)
-def load_drug_for_edit(n_clicks, drug_id):
-    """Load drug data when editing"""
-    if not drug_id:
-        return '', '', '', date.today(), 0, '', '', None
-    
-    conn = get_db_connection()
-    row = sql_utils.get_row(conn, 'drugs', drug_id)
-    drug = sql_utils.parse_drug(conn, 'drugs', row)
-    conn.close()
-    
-    return (
-        drug.get('name', ''),
-        drug.get('dose', ''),
-        drug.get('units', ''),
-        drug.get('expiration', date.today()),
-        drug.get('pieces_per_box', 0),
-        drug.get('type', ''),
-        drug.get('lote', ''),
-        drug.get('id')
-    )
-
-
-@callback(
-    Output('drug-modal-alert', 'children'),
-    Input('save-drug-btn', 'n_clicks'),
+     Output('current-drug-for-edit', 'data'),
+     Output('refresh-table-trigger', 'data')],
+    [Input('btn-correct-drug', 'n_clicks'),
+     Input('save-drug-btn', 'n_clicks')],
     [State('drug-name', 'value'),
      State('drug-dose', 'value'),
      State('drug-units', 'value'),
@@ -567,32 +542,66 @@ def load_drug_for_edit(n_clicks, drug_id):
      State('drug-pieces-per-box', 'value'),
      State('drug-form', 'value'),
      State('drug-lote', 'value'),
-     State('current-drug-for-edit', 'data')],
+     State('current-drug-for-edit', 'data'),
+     State('selected-drug-id', 'data')],
     prevent_initial_call=True
 )
-def save_drug(n_clicks, name, dose, units, expiration, pieces, form, lote, drug_id):
-    """Save drug to database"""
-    if not n_clicks:
-        return None
+def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, form, lote, drug_id_edit, selected_id):
+    """Manage drug form - handle both loading for edit and saving"""
+    trigger_id = ctx.triggered_id
     
-    values = {
-        'in_drug_name': name or '',
-        'in_dosagem': dose or '',
-        'comb_dosagem': units or '',
-        'in_DATE': expiration,
-        'in_pieces_in_box': str(pieces or 0),
-        'combo_forma': form or '',
-        'in_lote': lote or '',
-    }
+    # Handle loading drug for edit
+    if trigger_id == 'btn-correct-drug':
+        if not selected_id:
+            return None, '', '', '', date.today(), 0, '', '', None, None
+        
+        conn = get_db_connection()
+        row = sql_utils.get_row(conn, 'drugs', selected_id)
+        drug = sql_utils.parse_drug(conn, 'drugs', row)
+        conn.close()
+        
+        return (
+            None,  # No alert
+            drug.get('name', ''),
+            drug.get('dose', ''),
+            drug.get('units', ''),
+            drug.get('expiration', date.today()),
+            drug.get('pieces_per_box', 0),
+            drug.get('type', ''),
+            drug.get('lote', ''),
+            drug.get('id'),
+            None  # No table refresh
+        )
     
-    conn = get_db_connection()
-    success = drugs_win_utils.save_drug(values, conn, id=drug_id)
-    conn.close()
+    # Handle saving drug
+    elif trigger_id == 'save-drug-btn':
+        if not n_save:
+            return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None
+        
+        values = {
+            'in_drug_name': name or '',
+            'in_dosagem': dose or '',
+            'comb_dosagem': units or '',
+            'in_DATE': expiration,
+            'in_pieces_in_box': str(pieces or 0),
+            'combo_forma': form or '',
+            'in_lote': lote or '',
+        }
+        
+        conn = get_db_connection()
+        success = drugs_win_utils.save_drug(values, conn, id=drug_id_edit)
+        conn.close()
+        
+        if success:
+            alert = dbc.Alert("Medicamento guardado com sucesso!", color="success", duration=3000)
+            # Reset form fields and trigger table refresh
+            return (alert, '', '', '', date.today(), 0, '', '', None, {'timestamp': date.today().isoformat()})
+        else:
+            alert = dbc.Alert("Erro ao guardar medicamento. Verifique os campos.", color="danger", duration=3000)
+            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None)
     
-    if success:
-        return dbc.Alert("Medicamento guardado com sucesso!", color="success", duration=3000)
-    else:
-        return dbc.Alert("Erro ao guardar medicamento. Verifique os campos.", color="danger", duration=3000)
+    # Default return (should not reach here)
+    return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None
 
 
 # Movement Modal callbacks
