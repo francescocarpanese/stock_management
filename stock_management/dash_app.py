@@ -479,7 +479,7 @@ def update_table(search_text, expired, out_stock, present, refresh_trigger):
         data=data,
         row_selectable='single',
         selected_rows=[],
-        style_table={'overflowX': 'auto', 'width': '100%'},
+        style_table={'overflowX': 'auto', 'overflowY': 'auto', 'width': '100%', 'height': '600px'},
         style_cell={
             'textAlign': 'left',
             'padding': '16px',
