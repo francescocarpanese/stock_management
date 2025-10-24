@@ -13,9 +13,10 @@ import pandas as pd
 
 from stock_management.create_tables import create_all_tables
 import stock_management.sql_utils as sql_utils
-import stock_management.tkinter_main_win_utils as main_win_utils
-import stock_management.tkinter_drugs_win_utils as drugs_win_utils
-import stock_management.tkinter_movement_win_utils as movement_win_utils
+import stock_management.search_utils as search_utils
+import stock_management.drug_utils as drugs_win_utils
+import stock_management.movement_utils as movement_win_utils
+from stock_management import report_utils
 
 # Initialize the Dash app with Bootstrap theme
 app = dash.Dash(
@@ -174,7 +175,7 @@ def format_drugs_for_table(rows):
     if not rows:
         return []
     
-    formatted_rows = main_win_utils.format_table_rows(rows)
+    formatted_rows = search_utils.format_table_rows(rows)
     
     data = []
     for idx, row in enumerate(formatted_rows):
@@ -429,7 +430,7 @@ def update_table(search_text, expired, out_stock, present, drug_save, mov_save):
     conn = get_db_connection()
     
     search_text = search_text or ''
-    rows = main_win_utils.search_drug(conn, search_text, expired, out_stock, present)
+    rows = search_utils.search_drug(conn, search_text, expired, out_stock, present)
     
     conn.close()
     
@@ -741,28 +742,27 @@ def generate_report(n_clicks, start_date, end_date):
     
     conn = get_db_connection()
     
-    # Import report utilities
-    from stock_management import reports_utils
-    
     # Generate reports (this will create files in reports/ directory)
     try:
-        # Create a simple object to mimic the window for folder path
-        class ReportWindow:
-            def __init__(self):
-                self.report_folder = None
-            def set_report_folder(self, path):
-                self.report_folder = path
+        # Parse dates if provided
+        start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+        end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
         
-        window = ReportWindow()
-        from stock_management import tkinter_report_win_utils
-        tkinter_report_win_utils.save_report(values, conn, window)
+        success, error_msg, folder_path = report_utils.generate_reports(
+            conn, 
+            start_date=start_date_obj, 
+            end_date=end_date_obj
+        )
         
         conn.close()
+        
+        if not success:
+            return dbc.Alert(error_msg, color="danger", dismissable=True)
         
         return dbc.Alert([
             "Relatórios gerados com sucesso! ",
             html.Br(),
-            html.Small(f"Pasta: {window.report_folder}")
+            html.Small(f"Pasta: {folder_path}")
         ], color="success")
     except Exception as e:
         conn.close()

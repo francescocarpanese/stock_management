@@ -1,18 +1,18 @@
 """
-Tkinter tests for drug window - migrated from PySimpleGUI tests
+Tests for drug window - migrated from PySimpleGUI tests
 """
 import sqlite3
 import pytest
 import os
 from datetime import date
 import stock_management.sql_utils as sql_utils
-import stock_management.tkinter_drugs_win_utils as drugs_win_utils
+import stock_management.drug_utils as drugs_win_utils
 from stock_management.create_tables import create_all_tables
 
 
 @pytest.fixture(scope="module")
 def db_connection():
-    path_to_database = "test_drug_tkinter.db"
+    path_to_database = "test_drug.db"
 
     if os.path.exists(path_to_database):
         os.remove(path_to_database)
@@ -204,7 +204,9 @@ def test_check_entries_validation():
         "combo_forma": "Comprimidos",
         "in_lote": "kk23",
     }
-    assert not drugs_win_utils.check_entries(invalid_values)
+    is_valid, error_msg = drugs_win_utils.validate_drug_entries(invalid_values)
+    assert not is_valid
+    assert "nome do medicamento" in error_msg
 
     # Test invalid pieces_per_box - should fail
     invalid_values2 = {
@@ -216,7 +218,9 @@ def test_check_entries_validation():
         "combo_forma": "Comprimidos",
         "in_lote": "kk23",
     }
-    assert not drugs_win_utils.check_entries(invalid_values2)
+    is_valid, error_msg = drugs_win_utils.validate_drug_entries(invalid_values2)
+    assert not is_valid
+    assert "numero" in error_msg.lower()
 
     # Test valid values - should pass
     valid_values = {
@@ -228,4 +232,6 @@ def test_check_entries_validation():
         "combo_forma": "Comprimidos",
         "in_lote": "kk23",
     }
-    assert drugs_win_utils.check_entries(valid_values)
+    is_valid, error_msg = drugs_win_utils.validate_drug_entries(valid_values)
+    assert is_valid
+    assert error_msg == ""

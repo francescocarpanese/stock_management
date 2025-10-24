@@ -1,18 +1,18 @@
 """
-Tkinter tests for movement window - migrated from PySimpleGUI tests
+Tests for movement window - migrated from PySimpleGUI tests
 """
 import sqlite3
 import pytest
 import os
 from datetime import date
 import stock_management.sql_utils as sql_utils
-import stock_management.tkinter_movement_win_utils as movement_win_utils
+import stock_management.movement_utils as movement_win_utils
 from stock_management.create_tables import create_all_tables
 
 
 @pytest.fixture(scope="module")
 def db_connection():
-    path_to_database = "test_mov_tkinter.db"
+    path_to_database = "test_mov.db"
     # Remove the database if already existing
     if os.path.exists(path_to_database):
         os.remove(path_to_database)
@@ -372,7 +372,9 @@ def test_check_entries_validation():
         "comb_type_mov": "Entrada",
         "in_signature": "test",
     }
-    assert not movement_win_utils.check_entries(invalid_values)
+    is_valid, error_msg = movement_win_utils.validate_movement_entries(invalid_values)
+    assert not is_valid
+    assert "data" in error_msg.lower()
 
     # Test invalid boxes_moved - should fail
     invalid_values2 = {
@@ -383,7 +385,9 @@ def test_check_entries_validation():
         "comb_type_mov": "Entrada",
         "in_signature": "test",
     }
-    assert not movement_win_utils.check_entries(invalid_values2)
+    is_valid, error_msg = movement_win_utils.validate_movement_entries(invalid_values2)
+    assert not is_valid
+    assert "caixinha" in error_msg.lower()
 
     # Test valid values - should pass
     valid_values = {
@@ -394,7 +398,9 @@ def test_check_entries_validation():
         "comb_type_mov": "Entrada",
         "in_signature": "test",
     }
-    assert movement_win_utils.check_entries(valid_values)
+    is_valid, error_msg = movement_win_utils.validate_movement_entries(valid_values)
+    assert is_valid
+    assert error_msg == ""
 
 
 def test_get_tot_pieces_moved():

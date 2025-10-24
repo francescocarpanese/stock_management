@@ -1,8 +1,9 @@
+"""
+Movement management utilities - shared business logic
+Extracted from tkinter_movement_win_utils.py for use across different UIs
+"""
 import stock_management.sql_utils as sql_utils
-import sqlite3
-from tkinter import messagebox
 from datetime import datetime
-
 from stock_management.common_utils import is_positive_null_integer
 
 
@@ -92,88 +93,34 @@ def update_stock(
     )
 
 
-def check_entries(values):
+def validate_movement_entries(values):
     """
-    Validate form entries
+    Validate movement form entries
     
     Args:
         values: dictionary with form values
     
     Returns:
-        True if valid, False otherwise (shows popup with errors)
+        tuple: (is_valid, error_message)
     """
-    error_msg = ""
-    if values["in_data_movido"] == "":
-        error_msg += "\nInserir data"
-    if values["comb_type_mov"] == "":
-        error_msg += "\nInserir Entrada/Saida/Inventario"
-    if not is_positive_null_integer(values["boxes_moved"]):
-        error_msg += f"\nNumero de caixinha tem que ser un numero >=0"
-    if not is_positive_null_integer(values["pieces_moved"]):
-        error_msg += f"\nNumero de pecas tem que ser un numero >=0"
-
-    if error_msg != "":
-        messagebox.showerror("Erro", error_msg)
-        return False
-    return True
-
-
-def save_move(values, connection, drug, movement_id):
-    """
-    Save or update a movement in the database
+    error_msgs = []
     
-    Args:
-        values: dictionary with form values
-        connection: database connection
-        drug: dictionary with drug information
-        movement_id: movement id if updating, None if creating new
+    if not values.get("in_data_movido") or values["in_data_movido"] == "":
+        error_msgs.append("Inserir data")
     
-    Returns:
-        True if successful, False otherwise
-    """
-    if not check_entries(values):
-        return False
+    if not values.get("comb_type_mov") or values["comb_type_mov"] == "":
+        error_msgs.append("Inserir Entrada/Saida/Inventario")
+    
+    if not is_positive_null_integer(values.get("boxes_moved", "")):
+        error_msgs.append("Numero de caixinha tem que ser un numero >=0")
+    
+    if not is_positive_null_integer(values.get("pieces_moved", "")):
+        error_msgs.append("Numero de pecas tem que ser un numero >=0")
 
-    if values["comb_type_mov"] == "Entrada":
-        mov_type = "entry"
-    elif values["comb_type_mov"] == "Saida":
-        mov_type = "exit"
-    elif values["comb_type_mov"] == "Inventario":
-        mov_type = "inventory"
-
-    pieces_moved = get_tot_pieces_moved_casted(values, drug)
-
-    if movement_id:
-        sql_utils.update_movement(
-            conn=connection,
-            date_movement=values["in_data_movido"],
-            destination_origin=values["in_origin_destiny"],
-            pieces_moved=pieces_moved,
-            movement_type=mov_type,
-            signature=values["in_signature"],
-            mov_id=movement_id,
-        )
-    else:
-        sql_utils.add_movement(
-            conn=connection,
-            date_movement=values["in_data_movido"],
-            destination_origin=values["in_origin_destiny"],
-            pieces_moved=pieces_moved,
-            movement_type=mov_type,
-            signature=values["in_signature"],
-            drug_id=drug["id"],
-        )
-
-    # Update the stock and stock date in drug table
-    update_stock(
-        connection,
-        pieces_moved,
-        values["in_data_movido"],
-        mov_type,
-        drug["id"],
-    )
-
-    return True
+    if error_msgs:
+        return False, "\n".join(error_msgs)
+    
+    return True, ""
 
 
 def get_tot_pieces_moved_casted(values, drug):
@@ -187,14 +134,77 @@ def get_tot_pieces_moved_casted(values, drug):
     Returns:
         int: total number of pieces moved
     """
-    if values["pieces_moved"].isdigit() and int(values["pieces_moved"]) > 0:
+    pieces_moved = 0
+    boxes_moved = 0
+    
+    if values.get("pieces_moved", "").isdigit() and int(values["pieces_moved"]) > 0:
         pieces_moved = int(values["pieces_moved"])
-    else:
-        pieces_moved = 0
-    if values["boxes_moved"].isdigit() and int(values["boxes_moved"]) > 0:
+    
+    if values.get("boxes_moved", "").isdigit() and int(values["boxes_moved"]) > 0:
         boxes_moved = int(values["boxes_moved"])
-    else:
-        boxes_moved = 0
 
     tot_pieces_moved = pieces_moved + boxes_moved * drug["pieces_per_box"]
     return tot_pieces_moved
+
+
+def save_move(values, connection, drug, movement_id=None):
+    """
+    Save or update a movement in the database
+    
+    Args:
+        values: dictionary with form values
+        connection: database connection
+        drug: dictionary with drug information
+        movement_id: movement id if updating, None if creating new
+    
+    Returns:
+        tuple: (success, error_message)
+    """
+    is_valid, error_msg = validate_movement_entries(values)
+    if not is_valid:
+        return False, error_msg
+
+    # Map movement type
+    mov_type_map = {
+        "Entrada": "entry",
+        "Saida": "exit",
+        "Inventario": "inventory"
+    }
+    mov_type = mov_type_map.get(values["comb_type_mov"], values["comb_type_mov"])
+
+    pieces_moved = get_tot_pieces_moved_casted(values, drug)
+
+    try:
+        if movement_id:
+            sql_utils.update_movement(
+                conn=connection,
+                date_movement=values["in_data_movido"],
+                destination_origin=values.get("in_origin_destiny", ""),
+                pieces_moved=pieces_moved,
+                movement_type=mov_type,
+                signature=values.get("in_signature", ""),
+                mov_id=movement_id,
+            )
+        else:
+            sql_utils.add_movement(
+                conn=connection,
+                date_movement=values["in_data_movido"],
+                destination_origin=values.get("in_origin_destiny", ""),
+                pieces_moved=pieces_moved,
+                movement_type=mov_type,
+                signature=values.get("in_signature", ""),
+                drug_id=drug["id"],
+            )
+
+        # Update the stock and stock date in drug table
+        update_stock(
+            connection,
+            pieces_moved,
+            values["in_data_movido"],
+            mov_type,
+            drug["id"],
+        )
+        
+        return True, ""
+    except Exception as e:
+        return False, f"Erro ao guardar movimento: {str(e)}"

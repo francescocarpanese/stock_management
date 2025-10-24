@@ -1,3 +1,7 @@
+"""
+Drug search and formatting utilities - shared business logic
+Extracted from tkinter_main_win_utils.py for use across different UIs
+"""
 import sqlite3
 import stock_management.sql_utils as sql_utils
 from stock_management.common_utils import add_1k_separator

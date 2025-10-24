@@ -1,5 +1,7 @@
 # Simple GUI program for drug stock management
 
+A modern web-based application for hospital drug stock management built with Dash and Bootstrap.
+
 # User guide
 A minimal user guide is available [here](https://github.com/francescocarpanese/stock_management/wiki).
 
@@ -9,20 +11,17 @@ A minimal user guide is available [here](https://github.com/francescocarpanese/s
 
 - Install `uv` [here](https://docs.astral.sh/uv/)
 
-- On pull the repo
+- Clone the repository
 
-- Install it
+- Install dependencies
 ```bash
 cd stock_management
 uv sync
 ```
 
-- Run the application
+- Run the web application
 ```bash
-uv run stock_management/tkinter_main.py
+uv run stock-management
 ```
 
-- Web version 
-```bash
-uv run stock-management-web
-```
+The application will be available at http://127.0.0.1:8050

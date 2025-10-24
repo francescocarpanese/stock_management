@@ -1,31 +1,34 @@
+"""
+Report generation utilities - shared business logic
+Extracted from tkinter_report_win_utils.py for use across different UIs
+"""
 import stock_management.sql_utils as sql_utils
-from tkinter import messagebox
-from datetime import datetime
+from datetime import datetime, date
 from stock_management import reports_utils
 import os
-from datetime import date
 
 
-def save_report(values, db_connection, report_window):
+def generate_reports(db_connection, start_date=None, end_date=None):
     """
     Generate and save all reports
     
     Args:
-        values: dictionary with form values
         db_connection: database connection
-        report_window: reference to the report window to update the link
+        start_date: start date for reports (date object or None)
+        end_date: end date for reports (date object or None)
+    
+    Returns:
+        tuple: (success, error_message, folder_path)
     """
     folder_base_path, agg_ID_path, agg_name_path = reports_utils.create_folders()
 
-    if not values["in_data_start"]:
+    if not start_date:
         start_date = date(1990, 1, 1)
-    else:
-        start_date = datetime.strptime(values["in_data_start"], "%Y-%m-%d").date()
 
-    if not values["in_data_end"]:
+    if not end_date:
         end_date = date(2300, 1, 1)
-    else:
-        end_date = datetime.strptime(values["in_data_end"], "%Y-%m-%d").date()
+
+    errors = []
 
     # Save consumption report grouped by name, dose, type
     try:
@@ -37,8 +40,7 @@ def save_report(values, db_connection, report_window):
             file_name="consumption_nome_dose_type.xlsx",
         )
     except Exception as e:
-        print(e)
-        messagebox.showerror("Erro", "Erro ao gerar o relatorio de consumo por nome, dose e tipo")
+        errors.append(f"Erro ao gerar o relatorio de consumo por nome, dose e tipo: {str(e)}")
 
     # Save consumption report grouped by ID (drug with same lote)
     try:
@@ -50,8 +52,7 @@ def save_report(values, db_connection, report_window):
             file_name="consumption_ID.xlsx",
         )
     except Exception as e:
-        print(e)
-        messagebox.showerror("Erro", "Erro ao gerar o relatorio de consumo por ID")
+        errors.append(f"Erro ao gerar o relatorio de consumo por ID: {str(e)}")
 
     # Save info for the generated reports
     try:
@@ -62,8 +63,7 @@ def save_report(values, db_connection, report_window):
             end_date=end_date,
         )
     except Exception as e:
-        print(e)
-        messagebox.showerror("Erro", "Erro ao gerar o ficheiro INFO.txt")
+        errors.append(f"Erro ao gerar o ficheiro INFO.txt: {str(e)}")
 
     # Dump full database
     try:
@@ -73,8 +73,7 @@ def save_report(values, db_connection, report_window):
             file_name="full_database.xlsx",
         )
     except Exception as e:
-        print(e)
-        messagebox.showerror("Erro", "Erro ao gerar o dump da base de dados")
+        errors.append(f"Erro ao gerar o dump da base de dados: {str(e)}")
 
     # Save movement report per ID
     try:
@@ -83,8 +82,7 @@ def save_report(values, db_connection, report_window):
             folder_path=agg_ID_path,
         )
     except Exception as e:
-        print(e)
-        messagebox.showerror("Erro", "Erro ao gerar o relatorio de movimentos por ID")
+        errors.append(f"Erro ao gerar o relatorio de movimentos por ID: {str(e)}")
 
     # Save movement report per nome, dose, type
     try:
@@ -93,8 +91,7 @@ def save_report(values, db_connection, report_window):
             folder_path=agg_name_path,
         )
     except Exception as e:
-        print(e)
-        messagebox.showerror("Erro", "Erro ao gerar o relatorio de movimentos por nome, dose e tipo")
+        errors.append(f"Erro ao gerar o relatorio de movimentos por nome, dose e tipo: {str(e)}")
 
     # Save stock report per ID
     try:
@@ -103,8 +100,7 @@ def save_report(values, db_connection, report_window):
             folder_path=folder_base_path,
         )
     except Exception as e:
-        print(e)
-        messagebox.showerror("Erro", "Erro ao gerar o relatorio de stock por ID")
+        errors.append(f"Erro ao gerar o relatorio de stock por ID: {str(e)}")
 
     # Save stock report per nome, dose, type
     try:
@@ -113,8 +109,9 @@ def save_report(values, db_connection, report_window):
             folder_path=folder_base_path,
         )
     except Exception as e:
-        print(e)
-        messagebox.showerror("Erro", "Erro ao gerar o relatorio de stock por nome, dose e tipo")
+        errors.append(f"Erro ao gerar o relatorio de stock por nome, dose e tipo: {str(e)}")
 
-    # Update the link in the window
-    report_window.set_report_folder(folder_base_path)
+    if errors:
+        return False, "\n".join(errors), folder_base_path
+    
+    return True, "", folder_base_path

@@ -1,10 +1,5 @@
 import stock_management.sql_utils as sql_utils
-try:
-    # Try Tkinter version first
-    from stock_management.tkinter_movement_win_utils import update_stock, compute_new_stock
-except ImportError:
-    # Fall back to PySimpleGUI version if available
-    from stock_management.movement_win_utils import update_stock, compute_new_stock
+from stock_management.movement_utils import update_stock, compute_new_stock
 from datetime import date
 import os
 from tabulate import tabulate

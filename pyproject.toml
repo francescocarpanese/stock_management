@@ -13,7 +13,6 @@ dependencies = [
     "numpy>=1.24.3",
     "openpyxl>=3.1.2",
     "pandas>=2.0.1",
-    "tkcalendar>=1.6.1",
     "python-dateutil>=2.8.2",
     "tabulate>=0.9.0",
     "xlsxwriter>=3.1.2",
@@ -23,9 +22,7 @@ dependencies = [
 ]
 
 [project.scripts]
-stock-management = "stock_management.tkinter_main:main"
-stock-management-psg = "stock_management.main:main"
-stock-management-web = "stock_management.dash_app:main"
+stock-management = "stock_management.dash_app:main"
 
 [build-system]
 requires = ["hatchling"]
