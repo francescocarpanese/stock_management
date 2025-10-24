@@ -540,23 +540,18 @@ def store_selected_drug(selected_rows, table_data):
     Output('drug-modal', 'is_open'),
     [Input('btn-new-drug', 'n_clicks'),
      Input('btn-correct-drug', 'n_clicks'),
-     Input('close-drug-modal', 'n_clicks'),
-     Input('save-drug-btn', 'n_clicks')],
+     Input('close-drug-modal', 'n_clicks')],
     [State('drug-modal', 'is_open'),
      State('selected-drug-id', 'data')],
     prevent_initial_call=True
 )
-def toggle_drug_modal(n_new, n_correct, n_close, n_save, is_open, selected_id):
+def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
     """Toggle drug modal"""
     if ctx.triggered_id == 'btn-correct-drug' and not selected_id:
         return is_open
     
     if n_new or n_correct or n_close:
         return not is_open
-    
-    if n_save:
-        # Will be handled by save callback
-        return False
     
     return is_open
 
@@ -571,7 +566,8 @@ def toggle_drug_modal(n_new, n_correct, n_close, n_save, is_open, selected_id):
      Output('drug-form', 'value'),
      Output('drug-lote', 'value'),
      Output('current-drug-for-edit', 'data'),
-     Output('refresh-table-trigger', 'data')],
+     Output('refresh-table-trigger', 'data'),
+     Output('drug-modal', 'is_open', allow_duplicate=True)],
     [Input('btn-correct-drug', 'n_clicks'),
      Input('save-drug-btn', 'n_clicks')],
     [State('drug-name', 'value'),
@@ -592,7 +588,7 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
     # Handle loading drug for edit
     if trigger_id == 'btn-correct-drug':
         if not selected_id:
-            return None, '', '', '', date.today(), 0, '', '', None, None
+            return None, '', '', '', date.today(), 0, '', '', None, None, True
         
         conn = get_db_connection()
         row = sql_utils.get_row(conn, 'drugs', selected_id)
@@ -609,22 +605,46 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
             drug.get('type', ''),
             drug.get('lote', ''),
             drug.get('id'),
-            None  # No table refresh
+            None,  # No table refresh
+            True  # Keep modal open
         )
     
     # Handle saving drug
     elif trigger_id == 'save-drug-btn':
         if not n_save:
-            return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None
+            return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True
+        
+        # Validate required fields
+        missing_fields = []
+        if not name or name.strip() == '':
+            missing_fields.append("Nome")
+        if not dose or dose.strip() == '':
+            missing_fields.append("Dosagem")
+        if not units or units.strip() == '':
+            missing_fields.append("Unidades")
+        if not expiration:
+            missing_fields.append("Data de Expiração")
+        if pieces is None or pieces < 0:
+            missing_fields.append("Peças por Caixa (deve ser ≥ 0)")
+        if not form or form.strip() == '':
+            missing_fields.append("Forma")
+        if not lote or lote.strip() == '':
+            missing_fields.append("Lote")
+        
+        # If there are missing fields, show error and keep form data
+        if missing_fields:
+            error_message = "Por favor, preencha os seguintes campos obrigatórios: " + ", ".join(missing_fields)
+            alert = dbc.Alert(error_message, color="danger", dismissable=True)
+            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True)
         
         values = {
-            'in_drug_name': name or '',
-            'in_dosagem': dose or '',
-            'comb_dosagem': units or '',
+            'in_drug_name': name.strip(),
+            'in_dosagem': dose.strip(),
+            'comb_dosagem': units.strip(),
             'in_DATE': expiration,
-            'in_pieces_in_box': str(pieces or 0),
-            'combo_forma': form or '',
-            'in_lote': lote or '',
+            'in_pieces_in_box': str(pieces),
+            'combo_forma': form.strip(),
+            'in_lote': lote.strip(),
         }
         
         conn = get_db_connection()
@@ -634,36 +654,32 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
         today = date.today()
         if success:
             alert = dbc.Alert("Medicamento guardado com sucesso!", color="success", duration=3000)
-            # Reset form fields and trigger table refresh
-            return (alert, '', '', '', today, 0, '', '', None, {'timestamp': today.isoformat()})
+            # Reset form fields, trigger table refresh, and close modal
+            return (alert, '', '', '', today, 0, '', '', None, {'timestamp': today.isoformat()}, False)
         else:
             alert = dbc.Alert("Erro ao guardar medicamento. Verifique os campos.", color="danger", duration=3000)
-            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None)
+            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True)
     
     # Default return (should not reach here)
-    return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None
+    return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True
 
 
 # Movement Modal callbacks
 @callback(
     Output('movement-modal', 'is_open'),
     [Input('btn-new-movement', 'n_clicks'),
-     Input('close-movement-modal', 'n_clicks'),
-     Input('save-movement-btn', 'n_clicks')],
+     Input('close-movement-modal', 'n_clicks')],
     [State('movement-modal', 'is_open'),
      State('selected-drug-id', 'data')],
     prevent_initial_call=True
 )
-def toggle_movement_modal(n_new, n_close, n_save, is_open, selected_id):
+def toggle_movement_modal(n_new, n_close, is_open, selected_id):
     """Toggle movement modal"""
     if ctx.triggered_id == 'btn-new-movement' and not selected_id:
         return is_open
     
     if n_new or n_close:
         return not is_open
-    
-    if n_save:
-        return False
     
     return is_open
 
@@ -684,6 +700,9 @@ def load_drug_info_for_movement(n_clicks, drug_id):
     drug = sql_utils.parse_drug(conn, 'drugs', row)
     conn.close()
     
+    # Get current stock from the drug record
+    current_stock = drug.get('current_stock', 0)
+    
     return html.Div([
         html.P([html.Strong("Nome: "), drug.get('name', '')]),
         html.P([html.Strong("Dosagem: "), f"{drug.get('dose', '')} {drug.get('units', '')}"]),
@@ -691,6 +710,10 @@ def load_drug_info_for_movement(n_clicks, drug_id):
         html.P([html.Strong("Peças por Caixa: "), str(drug.get('pieces_per_box', ''))]),
         html.P([html.Strong("Forma: "), drug.get('type', '')]),
         html.P([html.Strong("Lote: "), drug.get('lote', '')]),
+        html.P([
+            html.Strong("Stock Atual: "), 
+            html.Span(str(current_stock), style={'fontSize': '18px', 'fontWeight': 'bold', 'color': '#007bff'})
+        ]),
     ], style={'fontSize': '15px'})
 
 
@@ -726,7 +749,8 @@ def update_movement_total(boxes, pieces, drug_id):
      Output('movement-pieces', 'value'),
      Output('movement-type', 'value'),
      Output('movement-signature', 'value'),
-     Output('refresh-table-trigger', 'data', allow_duplicate=True)],
+     Output('refresh-table-trigger', 'data', allow_duplicate=True),
+     Output('movement-modal', 'is_open', allow_duplicate=True)],
     Input('save-movement-btn', 'n_clicks'),
     [State('movement-date', 'date'),
      State('movement-origin', 'value'),
@@ -740,15 +764,37 @@ def update_movement_total(boxes, pieces, drug_id):
 def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature, drug_id):
     """Save movement to database, clear form, and refresh table"""
     if not n_clicks or not drug_id:
-        return None, mov_date, origin, boxes, pieces, mov_type, signature, None
+        return None, mov_date, origin, boxes, pieces, mov_type, signature, None, True
+    
+    # Validate required fields
+    missing_fields = []
+    if not mov_date:
+        missing_fields.append("Data do Movimento")
+    if not origin or origin.strip() == '':
+        missing_fields.append("Origem/Destino")
+    if boxes is None or boxes < 0:
+        missing_fields.append("Caixas Completas (deve ser ≥ 0)")
+    if pieces is None or pieces < 0:
+        missing_fields.append("Peças Fora de Caixa (deve ser ≥ 0)")
+    if boxes == 0 and pieces == 0:
+        missing_fields.append("Total de Peças (deve ser > 0)")
+    if not mov_type or mov_type.strip() == '':
+        missing_fields.append("Tipo de Movimento")
+    # Signature is optional, so we don't validate it
+    
+    # If there are missing fields, show error and keep form data
+    if missing_fields:
+        error_message = "Por favor, preencha os seguintes campos obrigatórios: " + ", ".join(missing_fields)
+        alert = dbc.Alert(error_message, color="danger", dismissable=True)
+        return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None, True)
     
     values = {
         'in_data_movido': mov_date,
-        'in_origin_destiny': origin or '',
-        'boxes_moved': str(boxes or 0),
-        'pieces_moved': str(pieces or 0),
-        'comb_type_mov': mov_type or '',
-        'in_signature': signature or '',
+        'in_origin_destiny': origin.strip(),
+        'boxes_moved': str(boxes),
+        'pieces_moved': str(pieces),
+        'comb_type_mov': mov_type.strip(),
+        'in_signature': signature.strip() if signature else '',
     }
     
     conn = get_db_connection()
@@ -761,11 +807,11 @@ def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature
     today = date.today()
     if success:
         alert = dbc.Alert("Movimento guardado com sucesso!", color="success", duration=3000)
-        # Clear form fields and trigger table refresh
-        return (alert, today, '', 0, 0, '', '', {'timestamp': today.isoformat()})
+        # Clear form fields, trigger table refresh, and close modal
+        return (alert, today, '', 0, 0, '', '', {'timestamp': today.isoformat()}, False)
     else:
         alert = dbc.Alert("Erro ao guardar movimento. Verifique os campos.", color="danger", duration=3000)
-        return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None)
+        return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None, True)
 
 
 # Report Modal callbacks
