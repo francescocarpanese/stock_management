@@ -402,6 +402,30 @@ app.layout = dbc.Container([
     dcc.Store(id='current-drug-for-edit'),
     dcc.Store(id='refresh-table-trigger'),
     
+    html.Link(
+        rel='stylesheet',
+        href='data:text/css;charset=utf-8,' + """
+            .dash-table-container .dash-spreadsheet-inner input[type="radio"],
+            .dash-table-container .dash-spreadsheet-inner input[type="checkbox"] {
+                width: 24px !important;
+                height: 24px !important;
+                cursor: pointer;
+            }
+            
+            .dash-table-container .dash-spreadsheet-inner td {
+                vertical-align: middle;
+            }
+            
+            .dash-spreadsheet tbody tr {
+                cursor: pointer;
+            }
+            
+            .dash-spreadsheet tbody tr:hover {
+                background-color: #e7f0ff !important;
+            }
+        """
+    ),
+    
     create_navbar(),
     
     create_filters_card(),
@@ -455,19 +479,34 @@ def update_table(search_text, expired, out_stock, present, refresh_trigger):
         data=data,
         row_selectable='single',
         selected_rows=[],
-        style_table={'overflowX': 'auto'},
+        style_table={'overflowX': 'auto', 'width': '100%'},
         style_cell={
             'textAlign': 'left',
-            'padding': '12px',
+            'padding': '16px',
             'fontSize': '15px',
-            'fontFamily': 'Arial'
+            'fontFamily': 'Arial',
+            'minWidth': '100px',
         },
+        style_cell_conditional=[
+            {
+                'if': {'column_id': ''},
+                'minWidth': '50px',
+                'width': '50px',
+                'maxWidth': '50px',
+                'textAlign': 'center',
+            },
+            {
+                'if': {'column_id': 'Nome'},
+                'minWidth': '200px',
+                'width': '200px',
+            }
+        ],
         style_header={
             'backgroundColor': '#007bff',
             'color': 'white',
             'fontWeight': 'bold',
             'fontSize': '16px',
-            'padding': '14px'
+            'padding': '16px'
         },
         style_data_conditional=[
             {
