@@ -30,7 +30,7 @@ def compute_new_stock(
         tuple: (new_stock, last_inventory_date, last_inventory_stock)
     """
     new_stock = old_stock
-    if movement_date > last_inventory_date:
+    if movement_date >= last_inventory_date:
         if movement_type == "inventory":
             last_inventory_date = movement_date
             new_stock = pieces_moved
