@@ -1,3 +1,7 @@
+"""
+Drug search and formatting utilities - shared business logic
+Extracted from tkinter_main_win_utils.py for use across different UIs
+"""
 import sqlite3
 import stock_management.sql_utils as sql_utils
 from stock_management.common_utils import add_1k_separator
@@ -39,25 +43,36 @@ def query_invalid():
     return f"1 = 0"
 
 
-def search_drug(conn, window, event, values):
+def search_drug(conn, search_text, chx_expired, chx_out_stock, chx_present):
+    """
+    Search for drugs based on filters
+    
+    Args:
+        conn: database connection
+        search_text: text to search in drug names
+        chx_expired: include expired drugs
+        chx_out_stock: include out of stock drugs
+        chx_present: include drugs with stock
+    
+    Returns:
+        list of rows matching the search criteria
+    """
     c = conn.cursor()
-
-    search_text = values["-in_name-"]
 
     filters = []
     if search_text:
         filters += [query_name_str(search_text)]
-        pass
+        
     # Filter out expired drugs
-    if not values["-chx_expired-"]:
+    if not chx_expired:
         filters += [query_not_expired()]
 
     # Select present and out of stock
-    if not values["-chx_out_stock-"] and values["-chx_present-"]:
+    if not chx_out_stock and chx_present:
         filters += [query_present()]
-    elif values["-chx_out_stock-"] and not values["-chx_present-"]:
+    elif chx_out_stock and not chx_present:
         filters += [query_out_stock()]
-    elif not values["-chx_out_stock-"] and not values["-chx_present-"]:
+    elif not chx_out_stock and not chx_present:
         filters += [query_invalid()]
 
     # Join filters
@@ -77,7 +92,8 @@ def search_drug(conn, window, event, values):
     return rows
 
 
-def get_all_drugs(conn, window=None, event=None, values=None):
+def get_all_drugs(conn):
+    """Get all drugs from the database ordered by name"""
     c = conn.cursor()
     c.execute(f"SELECT * FROM drugs ORDER BY name ASC")
     rows = c.fetchall()
@@ -85,20 +101,13 @@ def get_all_drugs(conn, window=None, event=None, values=None):
     return rows
 
 
-def display_table(window, rows=[]):
+def format_table_rows(rows):
+    """
+    Format rows for display in the table
+    Adds 1k separator to the stock column (last visible column)
+    """
     # Former than last is the total stock.
     # Format the string to add 1k separator.
     # In portughese the 1k separator is the "."
-    # TODO, make explicit format for each row
     table_viz = [row[1:-2] + (add_1k_separator(str(row[-2])),) for row in rows]
-
-    window["-list_table-"].update(values=table_viz)
-
-
-def diplay_last_drug(conn, window):
-    drug_id = sql_utils.get_last_row_id(conn, "drugs")
-    drug = sql_utils.get_row(conn, "drugs", drug_id)
-    drug_dict = sql_utils.parse_drug(conn, "drugs", drug)
-    window["-in_name-"].update(value=drug_dict["name"])
-    window["-chx_out_stock-"].update(value=True)
-    window.write_event_value("-in_name-", drug_dict["name"])
+    return table_viz

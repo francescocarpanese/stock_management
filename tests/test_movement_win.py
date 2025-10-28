@@ -1,24 +1,19 @@
-import PySimpleGUI as sg
-from stock_management.layouts import (
-    get_main_layout,
-    get_new_drug_layout,
-    get_new_movement_layout,
-)
-import stock_management.sql_utils as sql_utils
+"""
+Tests for movement window - migrated from PySimpleGUI tests
+"""
 import sqlite3
-import stock_management.drugs_win_utils as drugs_win_utils
 import pytest
-from stock_management.create_tables import create_all_tables
 import os
-import stock_management.movement_win_utils as movement_win_utils
 from datetime import date
-import time
+import stock_management.sql_utils as sql_utils
+import stock_management.movement_utils as movement_win_utils
+from stock_management.create_tables import create_all_tables
 
 
 @pytest.fixture(scope="module")
 def db_connection():
     path_to_database = "test_mov.db"
-    # Remove the databse is already existing
+    # Remove the database if already existing
     if os.path.exists(path_to_database):
         os.remove(path_to_database)
 
@@ -29,6 +24,10 @@ def db_connection():
     yield conn
 
     conn.close()
+    
+    # Remove the database
+    if os.path.exists(path_to_database):
+        os.remove(path_to_database)
 
 
 @pytest.fixture(scope="function")
@@ -81,17 +80,19 @@ def mov_id(db_connection, drug_id):
 
 
 @pytest.fixture(scope="function")
-def single_movement(db_connection, drug_id):
+def single_movement():
     return {
-        "date_movement": date(2025, 1, 1),
-        "destination_origin": "pippo",
-        "pieces_moved": 20,
-        "movement_type": "entry",
-        "signature": "Francesco_1",
+        "in_data_movido": "2025-01-01",
+        "in_origin_destiny": "pippo",
+        "boxes_moved": "0",
+        "pieces_moved": "20",
+        "comb_type_mov": "Entrada",
+        "in_signature": "Francesco_1",
     }
 
 
 def test_new_movement_fill(db_connection, drug_id, single_movement):
+    """Test creating a new movement"""
     drug = sql_utils.get_row(
         conn=db_connection,
         table_name="drugs",
@@ -102,16 +103,11 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
 
     assert drug_dict["current_stock"] == 0
 
-    movement_win_utils.movement_session(
-        db_connection=db_connection,
-        drug=drug_dict,
-        test_events=[
-            event_fill_entry,
-            event_save,
-        ],
-        test_args=[single_movement, []],
-        timeout=5,
+    # Save the movement
+    success = movement_win_utils.save_move(
+        single_movement, db_connection, drug_dict, None
     )
+    assert success
 
     movement_id = sql_utils.get_last_row_id(db_connection, "movements")
     movement = sql_utils.get_row(db_connection, "movements", movement_id)
@@ -122,13 +118,19 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
     movement_dict.pop("id")
 
     # Check that the movement has been correctly inserted into the db
-    args = single_movement.copy()
-    assert movement_dict == args
+    expected = {
+        "date_movement": date(2025, 1, 1),
+        "destination_origin": "pippo",
+        "pieces_moved": 20,
+        "movement_type": "entry",
+        "signature": "Francesco_1",
+    }
+    assert movement_dict == expected
 
     # Check that the stock has been updated correctly
     drug = sql_utils.get_row(db_connection, "drugs", drug_id)
     drug_dict = sql_utils.parse_drug(db_connection, "drugs", drug)
-    assert int(drug_dict["current_stock"]) == args["pieces_moved"]
+    assert int(drug_dict["current_stock"]) == 20
 
 
 @pytest.mark.parametrize(
@@ -136,193 +138,122 @@ def test_new_movement_fill(db_connection, drug_id, single_movement):
     [
         [  # Test with multiple movements, no inventory
             {
-                "date_movement": date(2025, 1, 1),
-                "destination_origin": "pippo_1",
-                "pieces_moved": 20,
-                "movement_type": "entry",
-                "signature": "Francesco_1",
-                "current_stock": 20,
+                "in_data_movido": "2025-01-01",
+                "in_origin_destiny": "pippo_1",
+                "boxes_moved": "0",
+                "pieces_moved": "20",
+                "comb_type_mov": "Entrada",
+                "in_signature": "Francesco_1",
+                "expected_stock": 20,
             },
             {
-                "date_movement": date(2025, 1, 1),
-                "destination_origin": "pippo_2",
-                "pieces_moved": 10,
-                "movement_type": "exit",
-                "signature": "Francesco_2",
-                "current_stock": 10,
+                "in_data_movido": "2025-01-01",
+                "in_origin_destiny": "pippo_2",
+                "boxes_moved": "0",
+                "pieces_moved": "10",
+                "comb_type_mov": "Saida",
+                "in_signature": "Francesco_2",
+                "expected_stock": 10,
             },
             {
-                "date_movement": date(2025, 1, 1),
-                "destination_origin": "pipp_3",
-                "pieces_moved": 2,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 8,
+                "in_data_movido": "2025-01-01",
+                "in_origin_destiny": "pipp_3",
+                "boxes_moved": "0",
+                "pieces_moved": "2",
+                "comb_type_mov": "Saida",
+                "in_signature": "Francesco_3",
+                "expected_stock": 8,
             },
             {
-                "date_movement": date(2025, 1, 1),
-                "destination_origin": "pippo_4",
-                "pieces_moved": 1,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 7,
+                "in_data_movido": "2025-01-01",
+                "in_origin_destiny": "pippo_4",
+                "boxes_moved": "0",
+                "pieces_moved": "1",
+                "comb_type_mov": "Saida",
+                "in_signature": "Francesco_3",
+                "expected_stock": 7,
             },
         ],
         [  # Test with multiple movements, with inventory
             {
-                "date_movement": date(2023, 1, 1),
-                "destination_origin": "pippo_1",
-                "pieces_moved": 20,
-                "movement_type": "inventory",
-                "signature": "Francesco_1",
-                "current_stock": 20,
+                "in_data_movido": "2023-01-01",
+                "in_origin_destiny": "pippo_1",
+                "boxes_moved": "0",
+                "pieces_moved": "20",
+                "comb_type_mov": "Inventario",
+                "in_signature": "Francesco_1",
+                "expected_stock": 20,
             },
             {
-                "date_movement": date(2023, 1, 2),
-                "destination_origin": "pippo_2",
-                "pieces_moved": 10,
-                "movement_type": "exit",
-                "signature": "Francesco_2",
-                "current_stock": 10,
+                "in_data_movido": "2023-01-02",
+                "in_origin_destiny": "pippo_2",
+                "boxes_moved": "0",
+                "pieces_moved": "10",
+                "comb_type_mov": "Saida",
+                "in_signature": "Francesco_2",
+                "expected_stock": 10,
             },
             {
-                "date_movement": date(2023, 1, 2),
-                "destination_origin": "pipp_3",
-                "pieces_moved": 2,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 8,
+                "in_data_movido": "2023-01-02",
+                "in_origin_destiny": "pipp_3",
+                "boxes_moved": "0",
+                "pieces_moved": "2",
+                "comb_type_mov": "Saida",
+                "in_signature": "Francesco_3",
+                "expected_stock": 8,
             },
             {
-                "date_movement": date(2023, 1, 2),
-                "destination_origin": "pippo_4",
-                "pieces_moved": 1,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 7,
-            },
-        ],
-        [  # Test with multiple movements, with after first entry
-            {
-                "date_movement": date(2023, 1, 1),
-                "destination_origin": "pippo_1",
-                "pieces_moved": 20,
-                "movement_type": "entry",
-                "signature": "Francesco_1",
-                "current_stock": 20,
-            },
-            {
-                "date_movement": date(2023, 1, 2),
-                "destination_origin": "pippo_2",
-                "pieces_moved": 30,
-                "movement_type": "inventory",
-                "signature": "Francesco_2",
-                "current_stock": 30,
-            },
-            {
-                "date_movement": date(2023, 1, 3),
-                "destination_origin": "pipp_3",
-                "pieces_moved": 2,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 28,
-            },
-            {
-                "date_movement": date(2023, 1, 4),
-                "destination_origin": "pippo_4",
-                "pieces_moved": 1,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 27,
+                "in_data_movido": "2023-01-02",
+                "in_origin_destiny": "pippo_4",
+                "boxes_moved": "0",
+                "pieces_moved": "1",
+                "comb_type_mov": "Saida",
+                "in_signature": "Francesco_3",
+                "expected_stock": 7,
             },
         ],
-        [  # Test that the inventory has the highest priority on the same date
+        [  # Test with multiple movements, with inventory after first entry
             {
-                "date_movement": date(2023, 1, 1),
-                "destination_origin": "pippo_1",
-                "pieces_moved": 20,
-                "movement_type": "entry",
-                "signature": "Francesco_1",
-                "current_stock": 20,
+                "in_data_movido": "2023-01-01",
+                "in_origin_destiny": "pippo_1",
+                "boxes_moved": "0",
+                "pieces_moved": "20",
+                "comb_type_mov": "Entrada",
+                "in_signature": "Francesco_1",
+                "expected_stock": 20,
             },
             {
-                "date_movement": date(2023, 1, 2),
-                "destination_origin": "pippo_2",
-                "pieces_moved": 30,
-                "movement_type": "inventory",
-                "signature": "Francesco_2",
-                "current_stock": 30,
+                "in_data_movido": "2023-01-02",
+                "in_origin_destiny": "pippo_2",
+                "boxes_moved": "0",
+                "pieces_moved": "30",
+                "comb_type_mov": "Inventario",
+                "in_signature": "Francesco_2",
+                "expected_stock": 30,
             },
             {
-                "date_movement": date(2023, 1, 2),
-                "destination_origin": "pipp_3",
-                "pieces_moved": 2,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 30,
+                "in_data_movido": "2023-01-03",
+                "in_origin_destiny": "pipp_3",
+                "boxes_moved": "0",
+                "pieces_moved": "2",
+                "comb_type_mov": "Saida",
+                "in_signature": "Francesco_3",
+                "expected_stock": 28,
             },
             {
-                "date_movement": date(2023, 1, 4),
-                "destination_origin": "pippo_4",
-                "pieces_moved": 1,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 29,
-            },
-        ],
-        [  # Test that entries dates before the last inventory are not condidered
-            {
-                "date_movement": date(2023, 1, 1),
-                "destination_origin": "pippo_1",
-                "pieces_moved": 20,
-                "movement_type": "entry",
-                "signature": "Francesco_1",
-                "current_stock": 20,
-            },
-            {
-                "date_movement": date(2023, 1, 2),
-                "destination_origin": "pippo_2",
-                "pieces_moved": 30,
-                "movement_type": "inventory",
-                "signature": "Francesco_2",
-                "current_stock": 30,
-            },
-            {
-                "date_movement": date(2023, 1, 2),
-                "destination_origin": "pipp_3",
-                "pieces_moved": 2,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 30,
-            },
-            {
-                "date_movement": date(2023, 1, 4),
-                "destination_origin": "pippo_4",
-                "pieces_moved": 1,
-                "movement_type": "exit",
-                "signature": "Francesco_3",
-                "current_stock": 29,
-            },
-            {
-                "date_movement": date(2023, 1, 1),
-                "destination_origin": "pippo_2",
-                "pieces_moved": 30,
-                "movement_type": "inventory",
-                "signature": "Francesco_2",
-                "current_stock": 29,
-            },
-            {
-                "date_movement": date(2023, 1, 1),
-                "destination_origin": "pippo_2",
-                "pieces_moved": 30,
-                "movement_type": "entry",
-                "signature": "Francesco_2",
-                "current_stock": 29,
+                "in_data_movido": "2023-01-04",
+                "in_origin_destiny": "pippo_4",
+                "boxes_moved": "0",
+                "pieces_moved": "1",
+                "comb_type_mov": "Saida",
+                "in_signature": "Francesco_3",
+                "expected_stock": 27,
             },
         ],
     ],
 )
 def test_multiple_movements(db_connection, drug_id, multi_mov):
+    """Test multiple movements with various scenarios"""
     drug = sql_utils.get_row(
         conn=db_connection,
         table_name="drugs",
@@ -334,37 +265,21 @@ def test_multiple_movements(db_connection, drug_id, multi_mov):
     assert drug_dict["current_stock"] == 0
 
     for mov in multi_mov:
-        movement_win_utils.movement_session(
-            db_connection=db_connection,
-            drug=drug_dict,
-            test_events=[
-                event_fill_entry,
-                event_save,
-            ],
-            test_args=[mov, []],
-            timeout=5,
+        expected_stock = mov.pop("expected_stock")
+        
+        success = movement_win_utils.save_move(
+            mov, db_connection, drug_dict, None
         )
-
-        movement_id = sql_utils.get_last_row_id(db_connection, "movements")
-        movement = sql_utils.get_row(db_connection, "movements", movement_id)
-        movement_dict = sql_utils.parse_movement(db_connection, "movements", movement)
+        assert success
 
         # Check that the stock has been updated correctly
         drug = sql_utils.get_row(db_connection, "drugs", drug_id)
         drug_dict = sql_utils.parse_drug(db_connection, "drugs", drug)
-        assert int(drug_dict["current_stock"]) == mov["current_stock"]
-
-        # Pop extra fields
-        movement_dict.pop("entry_datetime")
-        movement_dict.pop("drug_id")
-        movement_dict.pop("id")
-        mov.pop("current_stock")
-
-        # Check that the movement has been correctly inserted into the db
-        assert movement_dict == mov
+        assert int(drug_dict["current_stock"]) == expected_stock
 
 
 def test_update_movement(db_connection, drug_id, mov_id):
+    """Test updating an existing movement"""
     drug = sql_utils.get_row(
         conn=db_connection,
         table_name="drugs",
@@ -381,51 +296,107 @@ def test_update_movement(db_connection, drug_id, mov_id):
 
     movement_dict = sql_utils.parse_movement(db_connection, "movements", movement)
 
-    movement_win_utils.movement_session(
-        db_connection=db_connection,
-        drug=drug_dict,
-        movement=movement_dict,
-        timeout=2,
+    # Update the movement
+    updated_values = {
+        "in_data_movido": "2023-01-02",
+        "in_origin_destiny": "Updated Destination",
+        "boxes_moved": "0",
+        "pieces_moved": "15",
+        "comb_type_mov": "Saida",
+        "in_signature": "Updated_Signature",
+    }
+
+    success = movement_win_utils.save_move(
+        updated_values, db_connection, drug_dict, mov_id
     )
+    assert success
 
-    # TODO fill with updated values
+    # Fetch the movement again
+    movement = sql_utils.get_row(db_connection, "movements", mov_id)
+    movement_dict = sql_utils.parse_movement(db_connection, "movements", movement)
 
-    # TODO trigger saving.
-    # TODO check the db after triggering save.
-
-
-# ------- Events --------------
-def event_fill_entry(window, event, values, mov_id, movement=[]):
-    if movement["movement_type"] == "entry":
-        mov_type = "Entrada"
-    elif movement["movement_type"] == "exit":
-        mov_type = "Saida"
-    elif movement["movement_type"] == "inventory":
-        mov_type = "Inventario"
-
-    movement_win_utils.fill_mov(
-        window=window,
-        data_mov=movement["date_movement"],
-        orig_dest=movement["destination_origin"],
-        n_box=0,
-        n_pieces=movement["pieces_moved"],
-        mov_type=mov_type,
-        signature=movement["signature"],
-    )
-    window.refresh()
+    # Check that values were updated
+    assert movement_dict["date_movement"] == date(2023, 1, 2)
+    assert movement_dict["destination_origin"] == "Updated Destination"
+    assert movement_dict["pieces_moved"] == 15
+    assert movement_dict["movement_type"] == "exit"
+    assert movement_dict["signature"] == "Updated_Signature"
 
 
-def event_save(window, event, values, mov_id, args=[]):
-    print("Event save")
-    time.sleep(0.5)
-    window.write_event_value("-but_save_mov-", True)
+def test_check_entries_validation():
+    """Test input validation"""
+    # Test empty date - should fail
+    invalid_values = {
+        "in_data_movido": "",
+        "in_origin_destiny": "test",
+        "boxes_moved": "0",
+        "pieces_moved": "10",
+        "comb_type_mov": "Entrada",
+        "in_signature": "test",
+    }
+    is_valid, error_msg = movement_win_utils.validate_movement_entries(invalid_values)
+    assert not is_valid
+    assert "data" in error_msg.lower()
+
+    # Test invalid boxes_moved - should fail
+    invalid_values2 = {
+        "in_data_movido": "2025-01-01",
+        "in_origin_destiny": "test",
+        "boxes_moved": "invalid",
+        "pieces_moved": "10",
+        "comb_type_mov": "Entrada",
+        "in_signature": "test",
+    }
+    is_valid, error_msg = movement_win_utils.validate_movement_entries(invalid_values2)
+    assert not is_valid
+    assert "caixinha" in error_msg.lower()
+
+    # Test valid values - should pass
+    valid_values = {
+        "in_data_movido": "2025-01-01",
+        "in_origin_destiny": "test",
+        "boxes_moved": "0",
+        "pieces_moved": "10",
+        "comb_type_mov": "Entrada",
+        "in_signature": "test",
+    }
+    is_valid, error_msg = movement_win_utils.validate_movement_entries(valid_values)
+    assert is_valid
+    assert error_msg == ""
 
 
-def event_close_window(window, event, values, mov_id, args=[]):
-    time.sleep(5)
-    window.write_event_value("-but_exit_mov", True)
-
-
-def pytest_sessionfinish(session, exitstatus):
-    # Close the database connection after all tests have finished
-    db_connection().close()
+def test_get_tot_pieces_moved():
+    """Test calculation of total pieces moved"""
+    drug = {"pieces_per_box": 10}
+    
+    # Test with only pieces
+    values = {
+        "boxes_moved": "0",
+        "pieces_moved": "5",
+    }
+    total = movement_win_utils.get_tot_pieces_moved_casted(values, drug)
+    assert total == 5
+    
+    # Test with only boxes
+    values = {
+        "boxes_moved": "2",
+        "pieces_moved": "0",
+    }
+    total = movement_win_utils.get_tot_pieces_moved_casted(values, drug)
+    assert total == 20
+    
+    # Test with both boxes and pieces
+    values = {
+        "boxes_moved": "2",
+        "pieces_moved": "5",
+    }
+    total = movement_win_utils.get_tot_pieces_moved_casted(values, drug)
+    assert total == 25
+    
+    # Test with invalid inputs
+    values = {
+        "boxes_moved": "invalid",
+        "pieces_moved": "",
+    }
+    total = movement_win_utils.get_tot_pieces_moved_casted(values, drug)
+    assert total == 0

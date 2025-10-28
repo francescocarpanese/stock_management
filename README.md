@@ -1,5 +1,7 @@
 # Simple GUI program for drug stock management
 
+A modern web-based application for hospital drug stock management built with Dash and Bootstrap.
+
 # User guide
 A minimal user guide is available [here](https://github.com/francescocarpanese/stock_management/wiki).
 
@@ -7,29 +9,19 @@ A minimal user guide is available [here](https://github.com/francescocarpanese/s
 
 ## Developer
 
-Requires Python 3.10 or higher
+- Install `uv` [here](https://docs.astral.sh/uv/)
 
-If using miniconda
+- Clone the repository
+
+- Install dependencies
 ```bash
-conda create -n stock_management python=3.10
-conda activate stock_management
+cd stock_management
+uv sync
 ```
 
-Install in editable mode
+- Run the web application
 ```bash
-python -m pip install -e . 
+uv run stock-management
 ```
 
-Run the application
-```bash
-python -m stock_management.main 
-```
-
-# User
-
-The application is distributed together with `.exe` compiled for Windows 10/11.
-This is a standalone executable, no installation is required.
-
-
-
-
+The application will be available at http://127.0.0.1:8050
