@@ -225,6 +225,9 @@ def create_new_drug_modal():
                             {'label': 'ml', 'value': 'ml'},
                             {'label': 'g', 'value': 'g'},
                             {'label': 'mg', 'value': 'mg'},
+                            {'label': 'ml', 'value': 'ml'},
+                            {'label': 'mg/ml', 'value': 'mg/ml'},
+                            {'label': '%', 'value': '%'},                                                      
                         ],
                         value='',
                         style={'fontSize': '16px'}
