@@ -856,11 +856,15 @@ def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature
         alert = dbc.Alert("Erro: Medicamento não selecionado", color="danger", dismissable=True)
         return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None, True)
     
+    # Set default when not provided and not mandatory
+    if mov_type == 'Inventario' and (not origin or origin.strip() == ''):
+        origin = ''
+
     # Validate required fields
     missing_fields = []
     if not mov_date:
         missing_fields.append("Data do Movimento")
-    if not origin or origin.strip() == '':
+    if (not origin or origin.strip() == '') and not mov_type == 'Inventario':
         missing_fields.append("Origem/Destino")
     if boxes is None or boxes < 0:
         missing_fields.append("Caixas Completas (deve ser ≥ 0)")
@@ -917,24 +921,6 @@ def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature
         traceback.print_exc()
         alert = dbc.Alert(f"Erro inesperado: {str(e)}", color="danger", dismissable=True)
         return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None, True)
-    
-    conn = get_db_connection()
-    row = sql_utils.get_row(conn, 'drugs', drug_id)
-    drug = sql_utils.parse_drug(conn, 'drugs', row)
-    
-    # save_move returns a tuple (success, error_message)
-    success, error_msg = movement_win_utils.save_move(values, conn, drug, None)
-    conn.close()
-    
-    today = date.today()
-    if success:
-        alert = dbc.Alert("Movimento guardado com sucesso!", color="success", duration=3000)
-        # Clear form fields, trigger table refresh, close modal, and clear newly created drug
-        return (alert, today, '', 0, 0, '', '', {'timestamp': today.isoformat()}, False, None)
-    else:
-        alert = dbc.Alert(f"Erro ao guardar movimento: {error_msg}", color="danger", duration=3000)
-        return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None, True, None)
-
 
 # Report Modal callbacks
 @callback(
