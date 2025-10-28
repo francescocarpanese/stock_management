@@ -26,11 +26,9 @@ jobs:
       - name: Install uv
         run: pip install uv
 
-      - name: Install project and dev dependencies & run tests
+      - name: Install project & dev dependencies with uv
         run: |
-          # install your project in editable mode (so code changes reflect)
-          uv pip install -e .
-          # install dev/test dependencies from your dev group
-          uv pip install --group dev
-          # run pytest inside the uv‐managed environment
-          uv run pytest
+          uv pip install --system -e .
+          uv pip install --system --group dev
+      - name: Run tests
+        run: uv run pytest
