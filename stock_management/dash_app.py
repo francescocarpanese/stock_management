@@ -200,7 +200,7 @@ def create_new_drug_modal():
     today = date.today()
     
     return dbc.Modal([
-        dbc.ModalHeader(dbc.ModalTitle("Novo Medicamento", style={'fontSize': '20px'})),
+        dbc.ModalHeader(dbc.ModalTitle(id='drug-modal-title', children="Novo Medicamento", style={'fontSize': '20px'})),
         dbc.ModalBody([
             dbc.Row([
                 dbc.Col([
@@ -543,7 +543,8 @@ def store_selected_drug(selected_rows, table_data):
 
 # New Drug Modal callbacks
 @callback(
-    Output('drug-modal', 'is_open'),
+    [Output('drug-modal', 'is_open'),
+     Output('drug-modal-title', 'children', allow_duplicate=True)],
     [Input('btn-new-drug', 'n_clicks'),
      Input('btn-correct-drug', 'n_clicks'),
      Input('close-drug-modal', 'n_clicks')],
@@ -553,13 +554,19 @@ def store_selected_drug(selected_rows, table_data):
 )
 def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
     """Toggle drug modal"""
-    if ctx.triggered_id == 'btn-correct-drug' and not selected_id:
-        return is_open
+    trigger_id = ctx.triggered_id
     
-    if n_new or n_correct or n_close:
-        return not is_open
+    if trigger_id == 'btn-correct-drug' and not selected_id:
+        return is_open, dash.no_update
     
-    return is_open
+    if trigger_id == 'btn-new-drug':
+        return not is_open, "Novo Medicamento"
+    elif trigger_id == 'btn-correct-drug':
+        return not is_open, "Corrigir Medicamento"
+    elif trigger_id == 'close-drug-modal':
+        return not is_open, dash.no_update
+    
+    return is_open, dash.no_update
 
 
 @callback(
@@ -574,7 +581,8 @@ def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
      Output('current-drug-for-edit', 'data'),
      Output('refresh-table-trigger', 'data'),
      Output('drug-modal', 'is_open', allow_duplicate=True),
-     Output('newly-created-drug-id', 'data')],
+     Output('newly-created-drug-id', 'data'),
+     Output('drug-modal-title', 'children')],
     [Input('btn-correct-drug', 'n_clicks'),
      Input('save-drug-btn', 'n_clicks')],
     [State('drug-name', 'value'),
@@ -595,7 +603,7 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
     # Handle loading drug for edit
     if trigger_id == 'btn-correct-drug':
         if not selected_id:
-            return None, '', '', '', date.today(), 0, '', '', None, None, True, None
+            return None, '', '', '', date.today(), 0, '', '', None, None, True, None, "Novo Medicamento"
         
         conn = get_db_connection()
         row = sql_utils.get_row(conn, 'drugs', selected_id)
@@ -614,13 +622,16 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
             drug.get('id'),
             None,  # No table refresh
             True,  # Keep modal open
-            None  # No newly created drug
+            None,  # No newly created drug
+            "Corrigir Medicamento"  # Modal title for edit
         )
     
     # Handle saving drug
     elif trigger_id == 'save-drug-btn':
         if not n_save:
-            return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None
+            # Determine title based on whether we're editing or creating
+            modal_title = "Corrigir Medicamento" if drug_id_edit else "Novo Medicamento"
+            return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None, modal_title
         
         # Validate required fields
         missing_fields = []
@@ -643,7 +654,9 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
         if missing_fields:
             error_message = "Por favor, preencha os seguintes campos obrigatórios: " + ", ".join(missing_fields)
             alert = dbc.Alert(error_message, color="danger", dismissable=True)
-            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None)
+            # Determine title based on whether we're editing or creating
+            modal_title = "Corrigir Medicamento" if drug_id_edit else "Novo Medicamento"
+            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None, modal_title)
         
         values = {
             'in_drug_name': name.strip(),
@@ -672,13 +685,16 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
             alert = dbc.Alert("Medicamento guardado com sucesso!", color="success", duration=3000)
             # Reset form fields, trigger table refresh, close modal, and store new drug ID
             print(f"DEBUG: Returning new_drug_id={new_drug_id}")
-            return (alert, '', '', '', today, 0, '', '', None, {'timestamp': today.isoformat()}, False, new_drug_id)
+            return (alert, '', '', '', today, 0, '', '', None, {'timestamp': today.isoformat()}, False, new_drug_id, "Novo Medicamento")
         else:
             alert = dbc.Alert("Erro ao guardar medicamento. Verifique os campos.", color="danger", duration=3000)
-            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None)
+            # Determine title based on whether we're editing or creating
+            modal_title = "Corrigir Medicamento" if drug_id_edit else "Novo Medicamento"
+            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None, modal_title)
     
     # Default return (should not reach here)
-    return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None
+    modal_title = "Corrigir Medicamento" if drug_id_edit else "Novo Medicamento"
+    return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None, modal_title
 
 
 # Movement Modal callbacks
