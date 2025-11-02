@@ -333,10 +333,7 @@ def create_new_movement_modal():
                         style={'fontSize': '16px'}
                     ),
                 ], md=6, className='mb-3'),
-                dbc.Col([
-                    dbc.Label("Assinatura:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
-                    dbc.Input(id='movement-signature', type='text', style={'fontSize': '16px'}),
-                ], md=6, className='mb-3'),
+                # Assinatura field removed
             ]),
             html.Div(id='movement-modal-alert')
         ]),
@@ -797,7 +794,6 @@ def update_movement_total(boxes, pieces, drug_id, newly_created_id):
      Output('movement-boxes', 'value'),
      Output('movement-pieces', 'value'),
      Output('movement-type', 'value', allow_duplicate=True),
-     Output('movement-signature', 'value'),
      Output('refresh-table-trigger', 'data', allow_duplicate=True),
      Output('movement-modal', 'is_open', allow_duplicate=True)],
     Input('save-movement-btn', 'n_clicks'),
@@ -806,12 +802,11 @@ def update_movement_total(boxes, pieces, drug_id, newly_created_id):
      State('movement-boxes', 'value'),
      State('movement-pieces', 'value'),
      State('movement-type', 'value'),
-     State('movement-signature', 'value'),
      State('selected-drug-id', 'data'),
      State('newly-created-drug-id', 'data')],
     prevent_initial_call=True
 )
-def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature, drug_id, newly_created_id):
+def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, drug_id, newly_created_id):
     """Save movement to database, clear form, and refresh table"""
     # Use newly_created_id as fallback if drug_id is None
     if not drug_id and newly_created_id:
@@ -824,12 +819,12 @@ def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature
     
     if not n_clicks:
         print("  -> Returning: n_clicks is falsy")
-        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update
     
     if not drug_id:
         print("  -> Returning: drug_id is missing")
         alert = dbc.Alert("Erro: Medicamento não selecionado", color="danger", dismissable=True)
-        return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None, True)
+        return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
     
     # Set default when not provided and not mandatory
     if mov_type == 'Inventario' and (not origin or origin.strip() == ''):
@@ -856,7 +851,9 @@ def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature
         error_message = "Por favor, preencha os seguintes campos obrigatórios: " + ", ".join(missing_fields)
         print(f"  -> Validation failed: {error_message}")
         alert = dbc.Alert(error_message, color="danger", dismissable=True)
-        return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None, True)
+        return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
+    else:
+        alert = None
     
     values = {
         'in_data_movido': mov_date,
@@ -864,7 +861,7 @@ def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature
         'boxes_moved': str(boxes if boxes else 0),
         'pieces_moved': str(pieces if pieces else 0),
         'comb_type_mov': mov_type.strip(),
-        'in_signature': signature.strip() if signature else '',
+        # 'in_signature' removed
     }
     
     print(f"  -> Attempting to save with values: {values}")
@@ -886,16 +883,16 @@ def save_movement(n_clicks, mov_date, origin, boxes, pieces, mov_type, signature
         if success:
             alert = dbc.Alert("Movimento guardado com sucesso!", color="success", duration=3000)
             # Clear form fields, trigger table refresh, and close modal
-            return (alert, today, '', 0, 0, '', '', {'timestamp': today.isoformat()}, False)
+            return (alert, today, '', 0, 0, '', {'timestamp': today.isoformat()}, False)
         else:
             alert = dbc.Alert(f"Erro ao guardar movimento: {error_msg}", color="danger", dismissable=True)
-            return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None, True)
+            return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
     except Exception as e:
         print(f"  -> Exception occurred: {str(e)}")
         import traceback
         traceback.print_exc()
-        alert = dbc.Alert(f"Erro inesperado: {str(e)}", color="danger", dismissable=True)
-        return (alert, mov_date, origin, boxes, pieces, mov_type, signature, None, True)
+    alert = dbc.Alert(f"Erro inesperado: {str(e)}", color="danger", dismissable=True)
+    return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
 
 # Report Modal callbacks
 @callback(
