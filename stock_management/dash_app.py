@@ -198,14 +198,34 @@ def format_drugs_for_table(rows):
 def create_new_drug_modal():
     """Create modal for adding/editing drugs"""
     today = date.today()
-    
+
+    # Read drug names from assets/drug_list.txt
+    drug_list_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'drug_list.txt')
+    try:
+        with open(drug_list_path, 'r', encoding='utf-8') as f:
+            drug_names = [line.strip() for line in f if line.strip()]
+    except Exception:
+        drug_names = []
+
+    drug_name_options = [{'label': name, 'value': name} for name in drug_names]
+
     return dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("Novo Medicamento", style={'fontSize': '20px'})),
         dbc.ModalBody([
             dbc.Row([
                 dbc.Col([
                     dbc.Label("Nome:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
-                    dbc.Input(id='drug-name', type='text', style={'fontSize': '16px'}),
+                    dcc.Dropdown(
+                        id='drug-name',
+                        options=drug_name_options,
+                        placeholder='Selecione ou digite o nome...',
+                        searchable=True,
+                        multi=False,
+                        style={'fontSize': '16px'},
+                        value='',
+                        clearable=True,
+                    ),
+                    html.Div("Pode digitar um nome diferente se não estiver na lista.", style={'fontSize': '13px', 'color': '#888', 'marginTop': '4px'}),
                 ], md=12, className='mb-3'),
             ]),
             dbc.Row([
