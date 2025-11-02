@@ -214,18 +214,25 @@ def create_new_drug_modal():
         dbc.ModalBody([
             dbc.Row([
                 dbc.Col([
-                    dbc.Label("Nome:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
+                    dbc.Label("Nome do Medicamento:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
                     dcc.Dropdown(
-                        id='drug-name',
+                        id='drug-name-dropdown',
                         options=drug_name_options,
-                        placeholder='Selecione ou digite o nome...',
+                        placeholder='Cerca o seleziona dalla lista...',
                         searchable=True,
-                        multi=False,
-                        style={'fontSize': '16px'},
-                        value='',
                         clearable=True,
+                        value=None,
+                        style={'fontSize': '16px', 'marginBottom': '8px'}
                     ),
-                    html.Div("Pode digitar um nome diferente se não estiver na lista.", style={'fontSize': '13px', 'color': '#888', 'marginTop': '4px'}),
+                    dcc.Input(
+                        id='drug-name',
+                        type='text',
+                        placeholder='Oppure digita un nome personalizzato...',
+                        style={'fontSize': '16px'},
+                        debounce=True,
+                        value='',
+                    ),
+                    html.Div("Seleziona dalla lista oppure digita un nome diverso.", style={'fontSize': '13px', 'color': '#888', 'marginTop': '4px'}),
                 ], md=12, className='mb-3'),
             ]),
             # Dosagem and Unidades removed
@@ -437,6 +444,14 @@ app.layout = dbc.Container([
     
 ], fluid=True, style=CUSTOM_STYLE)
 
+
+@app.callback(
+    Output('drug-name', 'value', allow_duplicate=True),
+    Input('drug-name-dropdown', 'value'),
+    prevent_initial_call=True
+)
+def fill_drug_name_input(selected_name):
+    return selected_name if selected_name else ''
 
 # Callbacks
 @callback(
