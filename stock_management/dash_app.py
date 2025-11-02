@@ -17,6 +17,8 @@ import stock_management.search_utils as search_utils
 import stock_management.drug_utils as drugs_win_utils
 import stock_management.movement_utils as movement_win_utils
 from stock_management import report_utils
+from stock_management.formatting_utils import normalize_text
+
 
 # Initialize the Dash app with Bootstrap theme
 app = dash.Dash(
@@ -182,8 +184,6 @@ def format_drugs_for_table(rows):
         data.append({
             'id': rows[idx][0],  # Hidden ID
             'Nome': row[0],
-            'Dosagem': row[1],
-            'Units': row[2],
             'Expiração': row[3],
             'Peças/Caixa': row[4],
             'Forma': row[5],
@@ -228,34 +228,7 @@ def create_new_drug_modal():
                     html.Div("Pode digitar um nome diferente se não estiver na lista.", style={'fontSize': '13px', 'color': '#888', 'marginTop': '4px'}),
                 ], md=12, className='mb-3'),
             ]),
-            dbc.Row([
-                dbc.Col([
-                    dbc.Label("Dosagem:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
-                    dbc.Input(id='drug-dose', type='text', style={'fontSize': '16px'}),
-                ], md=6, className='mb-3'),
-                dbc.Col([
-                    dbc.Label("Unidades:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
-                    dcc.Dropdown(
-                        id='drug-units',
-                        options=[
-                            {'label': '', 'value': ''},
-                            {'label': 'l', 'value': 'l'},
-                            {'label': 'dl', 'value': 'dl'},
-                            {'label': 'cl', 'value': 'cl'},
-                            {'label': 'ml', 'value': 'ml'},
-                            {'label': 'g', 'value': 'g'},
-                            {'label': 'mg', 'value': 'mg'},
-                            {'label': 'ml', 'value': 'ml'},
-                            {'label': 'mg/ml', 'value': 'mg/ml'},
-                            {'label': '%', 'value': '%'},
-                            {'label': 'U.I.', 'value': 'U.I.'},
-                            {'label': 'size', 'value': 'size'},
-                        ],
-                        value='',
-                        style={'fontSize': '16px'}
-                    ),
-                ], md=6, className='mb-3'),
-            ]),
+            # Dosagem and Unidades removed
             dbc.Row([
                 dbc.Col([
                     dbc.Label("Data de Expiração:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
@@ -494,8 +467,6 @@ def update_table(search_text, expired, out_stock, present, refresh_trigger):
         id='drugs-table',
         columns=[
             {'name': 'Nome', 'id': 'Nome'},
-            {'name': 'Dosagem', 'id': 'Dosagem'},
-            {'name': 'Units', 'id': 'Units'},
             {'name': 'Expiração', 'id': 'Expiração'},
             {'name': 'Peças/Caixa', 'id': 'Peças/Caixa'},
             {'name': 'Forma', 'id': 'Forma'},
@@ -585,8 +556,6 @@ def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
 @callback(
     [Output('drug-modal-alert', 'children'),
      Output('drug-name', 'value'),
-     Output('drug-dose', 'value'),
-     Output('drug-units', 'value'),
      Output('drug-expiration', 'date'),
      Output('drug-pieces-per-box', 'value'),
      Output('drug-form', 'value'),
@@ -598,8 +567,6 @@ def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
     [Input('btn-correct-drug', 'n_clicks'),
      Input('save-drug-btn', 'n_clicks')],
     [State('drug-name', 'value'),
-     State('drug-dose', 'value'),
-     State('drug-units', 'value'),
      State('drug-expiration', 'date'),
      State('drug-pieces-per-box', 'value'),
      State('drug-form', 'value'),
@@ -608,25 +575,21 @@ def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
      State('selected-drug-id', 'data')],
     prevent_initial_call=True
 )
-def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, form, lote, drug_id_edit, selected_id):
+def manage_drug_form(n_correct, n_save, name, expiration, pieces, form, lote, drug_id_edit, selected_id):
     """Manage drug form - handle both loading for edit and saving"""
     trigger_id = ctx.triggered_id
     
     # Handle loading drug for edit
     if trigger_id == 'btn-correct-drug':
         if not selected_id:
-            return None, '', '', '', date.today(), 0, '', '', None, None, True, None
-        
+            return None, '', date.today(), 0, '', '', None, None, True, None
         conn = get_db_connection()
         row = sql_utils.get_row(conn, 'drugs', selected_id)
         drug = sql_utils.parse_drug(conn, 'drugs', row)
         conn.close()
-        
         return (
             None,  # No alert
             drug.get('name', ''),
-            drug.get('dose', ''),
-            drug.get('units', ''),
             drug.get('expiration', date.today()),
             drug.get('pieces_per_box', 0),
             drug.get('type', ''),
@@ -640,16 +603,11 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
     # Handle saving drug
     elif trigger_id == 'save-drug-btn':
         if not n_save:
-            return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None
-        
+            return None, name, expiration, pieces, form, lote, drug_id_edit, None, True, None
         # Validate required fields
         missing_fields = []
         if not name or name.strip() == '':
             missing_fields.append("Nome")
-        if not dose or dose.strip() == '':
-            missing_fields.append("Dosagem")
-        if not units or units.strip() == '':
-            missing_fields.append("Unidades")
         if not expiration:
             missing_fields.append("Data de Expiração")
         if pieces is None or pieces < 0:
@@ -658,47 +616,40 @@ def manage_drug_form(n_correct, n_save, name, dose, units, expiration, pieces, f
             missing_fields.append("Forma")
         if not lote or lote.strip() == '':
             missing_fields.append("Lote")
-        
         # If there are missing fields, show error and keep form data
         if missing_fields:
             error_message = "Por favor, preencha os seguintes campos obrigatórios: " + ", ".join(missing_fields)
             alert = dbc.Alert(error_message, color="danger", dismissable=True)
-            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None)
-        
+            return (alert, name, expiration, pieces, form, lote, drug_id_edit, None, True, None)
+        normalized_name = normalize_text(name.strip()) if name else ''
         values = {
-            'in_drug_name': name.strip(),
-            'in_dosagem': dose.strip(),
-            'comb_dosagem': units.strip(),
+            'in_drug_name': normalized_name,
             'in_DATE': expiration,
             'in_pieces_in_box': str(pieces),
             'combo_forma': form.strip(),
             'in_lote': lote.strip(),
         }
-        
         conn = get_db_connection()
         success = drugs_win_utils.save_drug(values, conn, id=drug_id_edit)
-        
         # Get the ID of the newly created or updated drug
         new_drug_id = None
         if success and not drug_id_edit:
             # This is a new drug, get the last inserted ID
             new_drug_id = sql_utils.get_last_row_id(conn, 'drugs')
             print(f"DEBUG: New drug created with ID: {new_drug_id}")
-        
         conn.close()
-        
         today = date.today()
         if success:
             alert = dbc.Alert("Medicamento guardado com sucesso!", color="success", duration=3000)
             # Reset form fields, trigger table refresh, close modal, and store new drug ID
             print(f"DEBUG: Returning new_drug_id={new_drug_id}")
-            return (alert, '', '', '', today, 0, '', '', None, {'timestamp': today.isoformat()}, False, new_drug_id)
+            return (alert, '', today, 0, '', '', None, {'timestamp': today.isoformat()}, False, new_drug_id)
         else:
             alert = dbc.Alert("Erro ao guardar medicamento. Verifique os campos.", color="danger", duration=3000)
-            return (alert, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None)
+            return (alert, name, expiration, pieces, form, lote, drug_id_edit, None, True, None)
     
     # Default return (should not reach here)
-    return None, name, dose, units, expiration, pieces, form, lote, drug_id_edit, None, True, None
+    return None, name, expiration, pieces, form, lote, drug_id_edit, None, True, None
 
 
 # Movement Modal callbacks
@@ -785,7 +736,6 @@ def load_drug_info_for_movement(n_clicks, newly_created_id, selected_id):
     
     drug_info = html.Div([
         html.P([html.Strong("Nome: "), drug.get('name', '')]),
-        html.P([html.Strong("Dosagem: "), f"{drug.get('dose', '')} {drug.get('units', '')}"]),
         html.P([html.Strong("Expiração: "), str(drug.get('expiration', ''))]),
         html.P([html.Strong("Peças por Caixa: "), str(drug.get('pieces_per_box', ''))]),
         html.P([html.Strong("Forma: "), drug.get('type', '')]),
