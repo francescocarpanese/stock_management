@@ -300,11 +300,13 @@ def create_new_movement_modal():
                         style={'fontSize': '16px'}
                     ),
                 ], md=6, className='mb-3'),
+            ]),
+            dbc.Row([
                 dbc.Col([
-                    dbc.Label("Origem/Destino:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
+                    dbc.Label("Origem or Destino:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
                     dbc.Input(id='movement-origin', type='text', style={'fontSize': '16px'}),
                 ], md=6, className='mb-3'),
-            ]),
+            ]), 
             dbc.Row([
                 dbc.Col([
                     dbc.Label("Caixas Completas:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
@@ -465,7 +467,7 @@ def update_table(search_text, expired, out_stock, present, refresh_trigger):
         columns=[
             {'name': 'Nome', 'id': 'Nome'},
             {'name': 'Expiração', 'id': 'Expiração'},
-            {'name': 'Peças/Caixa', 'id': 'Peças/Caixa'},
+            {'name': 'Peças por Caixa', 'id': 'Peças/Caixa'},
             {'name': 'Forma', 'id': 'Forma'},
             {'name': 'Lote', 'id': 'Lote'},
             {'name': 'Stock', 'id': 'Stock'},
