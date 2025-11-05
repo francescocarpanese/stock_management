@@ -14,6 +14,9 @@ def normalize_text(text):
 
 
 def process_file(input_path, output_path):
+    """
+    Process the input file containing drug names separated by newlines and normalise drug names and save to output file.
+    """
     with open(input_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
