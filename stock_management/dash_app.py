@@ -82,15 +82,6 @@ def create_navbar():
 
 def create_filters_card():
     """Create filters and search card"""
-    # Get unique drug names from database
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT name FROM drugs ORDER BY name")
-    drug_names = [row[0] for row in cursor.fetchall() if row[0]]
-    conn.close()
-    
-    drug_options = [{'label': name, 'value': name} for name in drug_names]
-    
     return dbc.Card([
         dbc.CardBody([
             dbc.Row([
@@ -98,7 +89,7 @@ def create_filters_card():
                     dbc.Label("Nome do Medicamento:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
                     dcc.Dropdown(
                         id='search-input',
-                        options=drug_options,
+                        options=[],  # Will be populated by callback
                         placeholder='Selecione ou pesquise o medicamento...',
                         searchable=True,
                         clearable=True,
@@ -448,6 +439,31 @@ app.layout = dbc.Container([
 )
 def fill_drug_name_input(selected_name):
     return selected_name if selected_name else ''
+
+
+@app.callback(
+    Output('search-input', 'options'),
+    Input('search-input', 'search_value')
+)
+def update_search_dropdown_options(search_value):
+    """Filter dropdown options to show only names that start with the search value"""
+    # Get unique drug names from database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT name FROM drugs ORDER BY name")
+    drug_names = [row[0] for row in cursor.fetchall() if row[0]]
+    conn.close()
+    
+    # If no search value, return all options
+    if not search_value:
+        return [{'label': name, 'value': name} for name in drug_names]
+    
+    # Filter names that start with the search value (case-insensitive)
+    search_lower = search_value.lower()
+    filtered_names = [name for name in drug_names if name.lower().startswith(search_lower)]
+    
+    return [{'label': name, 'value': name} for name in filtered_names]
+
 
 # Callbacks
 @callback(
