@@ -82,24 +82,28 @@ def create_navbar():
 
 def create_filters_card():
     """Create filters and search card"""
+    # Get unique drug names from database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT name FROM drugs ORDER BY name")
+    drug_names = [row[0] for row in cursor.fetchall() if row[0]]
+    conn.close()
+    
+    drug_options = [{'label': name, 'value': name} for name in drug_names]
+    
     return dbc.Card([
-        dbc.CardHeader(
-            html.H5([
-                html.I(className="fas fa-filter me-2"),
-                "Filtros e Pesquisa"
-            ], className="mb-0"),
-            style={'backgroundColor': '#e9ecef'}
-        ),
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([
                     dbc.Label("Nome do Medicamento:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
-                    dbc.Input(
+                    dcc.Dropdown(
                         id='search-input',
-                        type='text',
-                        placeholder='Digite o nome...',
-                        debounce=True,
-                        style={'fontSize': '16px', 'padding': '10px'}
+                        options=drug_options,
+                        placeholder='Selecione ou pesquise o medicamento...',
+                        searchable=True,
+                        clearable=True,
+                        value=None,
+                        style={'fontSize': '16px'}
                     )
                 ], md=6),
                 dbc.Col([
@@ -159,13 +163,6 @@ def create_action_buttons():
 def create_drugs_table():
     """Create the drugs table"""
     return dbc.Card([
-        dbc.CardHeader(
-            html.H5([
-                html.I(className="fas fa-pills me-2"),
-                "Lista de Medicamentos"
-            ], className="mb-0"),
-            style={'backgroundColor': '#e9ecef'}
-        ),
         dbc.CardBody([
             html.Div(id='table-container')
         ])
