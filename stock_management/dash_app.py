@@ -215,7 +215,7 @@ def create_new_drug_modal():
                     dcc.Dropdown(
                         id='drug-name-dropdown',
                         options=drug_name_options,
-                        placeholder='Cerca o seleziona dalla lista...',
+                        placeholder='Procura da lista...',
                         searchable=True,
                         clearable=True,
                         value=None,
@@ -224,12 +224,11 @@ def create_new_drug_modal():
                     dcc.Input(
                         id='drug-name',
                         type='text',
-                        placeholder='Oppure digita un nome personalizzato...',
-                        style={'fontSize': '16px'},
+                        placeholder='Escreva um novo nome se não estiver na lista.',
+                        style={'fontSize': '16px', 'width': '100%'},
                         debounce=True,
                         value='',
                     ),
-                    html.Div("Seleziona dalla lista oppure digita un nome diverso.", style={'fontSize': '13px', 'color': '#888', 'marginTop': '4px'}),
                 ], md=12, className='mb-3'),
             ]),
             # Dosagem and Unidades removed
