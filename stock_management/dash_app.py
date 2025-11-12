@@ -96,6 +96,7 @@ def create_filters_card():
                         value=None,
                         style={'fontSize': '16px'}
                     )
+
                 ], md=6),
                 dbc.Col([
                     dbc.Label("Filtros:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
@@ -200,28 +201,36 @@ def create_new_drug_modal():
     return dbc.Modal([
         dbc.ModalHeader(dbc.ModalTitle("Novo Medicamento", style={'fontSize': '20px'})),
         dbc.ModalBody([
-            dbc.Row([
-                dbc.Col([
-                    dbc.Label("Nome do Medicamento:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
-                    dcc.Dropdown(
-                        id='drug-name-dropdown',
-                        options=drug_name_options,
-                        placeholder='Procura da lista...',
-                        searchable=True,
-                        clearable=True,
-                        value=None,
-                        style={'fontSize': '16px', 'marginBottom': '8px'}
+                dbc.Row([
+                    dbc.Col([
+                        dbc.Label("Nome do Medicamento:", style={'fontSize': '16px', 'fontWeight': 'bold'}),
+                    ], width=12),
+                ], className='mb-1'),
+                dbc.Row([
+                    dbc.Col(
+                        dcc.Dropdown(
+                            id='drug-name-dropdown',
+                            options=drug_name_options,
+                            placeholder='Procura da lista...',
+                            searchable=True,
+                            clearable=True,
+                            value=None,
+                            style={'fontSize': '16px', 'marginBottom': '8px'}
+                        ),
+                        width=6
                     ),
-                    dcc.Input(
-                        id='drug-name',
-                        type='text',
-                        placeholder='Escreva um novo nome se não estiver na lista.',
-                        style={'fontSize': '16px', 'width': '100%'},
-                        debounce=True,
-                        value='',
+                    dbc.Col(
+                        dcc.Input(
+                            id='drug-name',
+                            type='text',
+                            placeholder='Escreva um novo nome se não estiver na lista.',
+                            style={'fontSize': '16px', 'width': '100%'},
+                            debounce=True,
+                            value=''
+                        ),
+                        width=6
                     ),
-                ], md=12, className='mb-3'),
-            ]),
+                ], className='mb-3'),
             # Dosagem and Unidades removed
             dbc.Row([
                 dbc.Col([
