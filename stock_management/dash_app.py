@@ -591,6 +591,7 @@ def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
 @callback(
     [Output('drug-modal-alert', 'children'),
      Output('drug-name', 'value'),
+     Output('drug-name-dropdown', 'value'),
      Output('drug-expiration', 'date'),
      Output('drug-pieces-per-box', 'value'),
      Output('drug-form', 'value'),
@@ -599,7 +600,8 @@ def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
      Output('refresh-table-trigger', 'data'),
      Output('drug-modal', 'is_open', allow_duplicate=True),
      Output('newly-created-drug-id', 'data')],
-    [Input('btn-correct-drug', 'n_clicks'),
+    [Input('btn-new-drug', 'n_clicks'),
+     Input('btn-correct-drug', 'n_clicks'),
      Input('save-drug-btn', 'n_clicks')],
     [State('drug-name', 'value'),
      State('drug-expiration', 'date'),
@@ -610,20 +612,28 @@ def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
      State('selected-drug-id', 'data')],
     prevent_initial_call=True
 )
-def manage_drug_form(n_correct, n_save, name, expiration, pieces, form, lote, drug_id_edit, selected_id):
+def manage_drug_form(n_new, n_correct, n_save, name, expiration, pieces, form, lote, drug_id_edit, selected_id):
     """Manage drug form - handle both loading for edit and saving"""
     trigger_id = ctx.triggered_id
+
+    # Handle opening modal for a new drug: clear form fields
+    if trigger_id == 'btn-new-drug':
+        today = date.today()
+        # Return: alert, drug-name, drug-name-dropdown, expiration, pieces, form, lote, current-edit, refresh, is_open, newly_created
+        return None, '', None, today, 0, None, '', None, None, True, None
     
     # Handle loading drug for edit
     if trigger_id == 'btn-correct-drug':
         if not selected_id:
-            return None, '', date.today(), 0, '', '', None, None, True, None
+            # No selection when trying to correct: keep modal state open but empty
+            return None, '', None, date.today(), 0, None, '', None, None, True, None
         conn = get_db_connection()
         row = sql_utils.get_row(conn, 'drugs', selected_id)
         drug = sql_utils.parse_drug(conn, 'drugs', row)
         conn.close()
         return (
             None,  # No alert
+            drug.get('name', ''),
             drug.get('name', ''),
             drug.get('expiration', date.today()),
             drug.get('pieces_per_box', 0),
@@ -638,7 +648,8 @@ def manage_drug_form(n_correct, n_save, name, expiration, pieces, form, lote, dr
     # Handle saving drug
     elif trigger_id == 'save-drug-btn':
         if not n_save:
-            return None, name, expiration, pieces, form, lote, drug_id_edit, None, True, None
+            # Keep current values and preserve dropdown selection if present
+            return None, name, name if name else None, expiration, pieces, form, lote, drug_id_edit, None, True, None
         # Validate required fields
         missing_fields = []
         if not name or name.strip() == '':
@@ -655,7 +666,7 @@ def manage_drug_form(n_correct, n_save, name, expiration, pieces, form, lote, dr
         if missing_fields:
             error_message = "Por favor, preencha os seguintes campos obrigatórios: " + ", ".join(missing_fields)
             alert = dbc.Alert(error_message, color="danger", dismissable=True)
-            return (alert, name, expiration, pieces, form, lote, drug_id_edit, None, True, None)
+            return (alert, name, name if name else None, expiration, pieces, form, lote, drug_id_edit, None, True, None)
         normalized_name = normalize_text(name.strip()) if name else ''
         values = {
             'in_drug_name': normalized_name,
@@ -678,13 +689,13 @@ def manage_drug_form(n_correct, n_save, name, expiration, pieces, form, lote, dr
             alert = dbc.Alert("Medicamento guardado com sucesso!", color="success", duration=3000)
             # Reset form fields, trigger table refresh, close modal, and store new drug ID
             print(f"DEBUG: Returning new_drug_id={new_drug_id}")
-            return (alert, '', today, 0, '', '', None, {'timestamp': today.isoformat()}, False, new_drug_id)
+            return (alert, '', None, today, 0, None, '', None, {'timestamp': today.isoformat()}, False, new_drug_id)
         else:
             alert = dbc.Alert("Erro ao guardar medicamento. Verifique os campos.", color="danger", duration=3000)
-            return (alert, name, expiration, pieces, form, lote, drug_id_edit, None, True, None)
+            return (alert, name, name if name else None, expiration, pieces, form, lote, drug_id_edit, None, True, None)
     
     # Default return (should not reach here)
-    return None, name, expiration, pieces, form, lote, drug_id_edit, None, True, None
+    return None, name, name if name else None, expiration, pieces, form, lote, drug_id_edit, None, True, None
 
 
 # Movement Modal callbacks
