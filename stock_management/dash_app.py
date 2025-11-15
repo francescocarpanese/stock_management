@@ -11,6 +11,7 @@ import sqlite3
 import os
 import pandas as pd
 import argparse
+import sys
 
 from stock_management.create_tables import create_all_tables
 import stock_management.sql_utils as sql_utils
@@ -247,9 +248,13 @@ def create_new_drug_modal():
     today = date.today()
 
     # Read drug names from assets/drug_list.txt
-    drug_list_path = os.path.join(
-        os.path.dirname(__file__), "..", "assets", "drug_list.txt"
-    )
+    if hasattr(sys, "_MEIPASS"):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.dirname(__file__)
+
+    drug_list_path = os.path.join(base_path, "assets", "drug_list.txt")
+
     try:
         with open(drug_list_path, "r", encoding="utf-8") as f:
             drug_names = [line.strip() for line in f if line.strip()]

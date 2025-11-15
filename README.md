@@ -25,3 +25,9 @@ uv run stock-management
 ```
 
 The application will be available at http://127.0.0.1:8050
+
+## Production
+To compile the app with a .exe 
+```bash
+uv run pyinstaller main.spec
+```
