@@ -1,6 +1,6 @@
 [project]
 name = "stock-management"
-version = "1.4.0"
+version = "1.4.1"
 description = "GUI application for hospital drug stock management"
 readme = "README.md"
 requires-python = ">=3.13"

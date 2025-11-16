@@ -253,7 +253,7 @@ def create_new_drug_modal():
     else:
         base_path = os.path.dirname(__file__)
 
-    drug_list_path = os.path.join(base_path, "assets", "drug_list.txt")
+    drug_list_path = os.path.join(base_path, "..", "assets", "drug_list.txt")
 
     try:
         with open(drug_list_path, "r", encoding="utf-8") as f:
