@@ -141,7 +141,7 @@ def create_filters_card():
                                             dbc.Checkbox(
                                                 id="filter-out-stock",
                                                 label="Esgotados",
-                                                value=True,
+                                                value=False,
                                                 className="me-3",
                                                 style={"fontSize": "16px"},
                                             ),
