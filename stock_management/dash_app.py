@@ -968,7 +968,7 @@ def manage_drug_form(
     if trigger_id == "btn-new-drug":
         today = date.today()
         # Return: alert, drug-name, drug-name-dropdown, expiration, pieces, form, lote, current-edit, refresh, is_open, newly_created
-        return None, "", None, today, 0, None, "", None, None, True, None
+        return None, "", None, today, None, None, "", None, None, True, None
 
     # Handle loading drug for edit
     if trigger_id == "btn-correct-drug":
