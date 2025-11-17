@@ -1357,7 +1357,7 @@ def save_movement(
         missing_fields.append("Caixas Completas (deve ser ≥ 0)")
     if pieces is None or pieces < 0:
         missing_fields.append("Peças Fora de Caixa (deve ser ≥ 0)")
-    if (boxes is None or boxes == 0) and (pieces is None or pieces == 0):
+    if (boxes is None or boxes == 0) and (pieces is None or pieces == 0) and (mov_type != "Inventario"):
         missing_fields.append("Total de Peças (deve ser > 0)")
     if not mov_type or mov_type.strip() == "":
         missing_fields.append("Tipo de Movimento")
