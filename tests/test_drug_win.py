@@ -63,8 +63,8 @@ def drug_id(db_connection):
             ),
             dict(
                 name="test 1",
-                dose="500",
-                units="ml",
+                dose="",
+                units="",
                 expiration=date(2025, 1, 1),
                 pieces_per_box=1,
                 type="Comprimidos",
@@ -84,9 +84,9 @@ def drug_id(db_connection):
                 in_lote="kk23",
             ),
             dict(
-                name="test",
-                dose="100",
-                units="ml",
+                name="test 100ml",
+                dose="",
+                units="",
                 expiration=date(2025, 1, 1),
                 pieces_per_box=1,
                 type="Comprimidos",
@@ -106,9 +106,9 @@ def drug_id(db_connection):
                 in_lote="kk23",
             ),
             dict(
-                name="test",
-                dose="500",
-                units="ml",
+                name="test 100ml",
+                dose="",
+                units="",
                 expiration=date(2025, 1, 1),
                 pieces_per_box=1,
                 type="Comprimidos",
@@ -128,9 +128,9 @@ def drug_id(db_connection):
                 in_lote="kk23",
             ),
             dict(
-                name="test",
-                dose="500",
-                units="cl",
+                name="test 100ml",
+                dose="",
+                units="",
                 expiration=date(2025, 1, 1),
                 pieces_per_box=1,
                 type="Comprimidos",
@@ -167,8 +167,8 @@ def test_update_drug(db_connection, drug_id):
     # Update the drug
     updated_values = {
         "in_drug_name": "test2",
-        "in_dosagem": "200",
-        "comb_dosagem": "ml",
+        "in_dosagem": "",
+        "comb_dosagem": "",
         "in_DATE": "2025-12-31",
         "in_pieces_in_box": "5",
         "combo_forma": "Ampolla",
@@ -184,8 +184,8 @@ def test_update_drug(db_connection, drug_id):
 
     # Check that values were updated
     assert drug_dict["name"] == "test 2"
-    assert drug_dict["dose"] == "200"
-    assert drug_dict["units"] == "ml"
+    assert drug_dict["dose"] == ""
+    assert drug_dict["units"] == ""
     assert drug_dict["expiration"] == date(2025, 12, 31)
     assert drug_dict["pieces_per_box"] == 5
     assert drug_dict["type"] == "Ampolla"
