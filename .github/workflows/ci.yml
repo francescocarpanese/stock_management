@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.12]   # optional: test multiple versions
+        python-version: [3.13]   # optional: test multiple versions
     steps:
       - name: Set up Python
         uses: actions/setup-python@v2
