@@ -59,8 +59,10 @@ def save_drug(values, connection, id=None):
     # Parse the drug name, dose and units
     drug_string_clean = clear_string(values["in_drug_name"])
     name_in, dose_in, units_in = parse_dose_units(drug_string_clean)
-    dose = values.get("in_dosagem") if values.get("in_dosagem") else dose_in
-    units = values.get("comb_dosagem") if values.get("comb_dosagem") else units_in
+    name_in = drug_string_clean # We keep dose and units as part of the name as too many edge cases
+    # TODO keep for the moment this in the database even if no longer used
+    dose = ""
+    units = ""
 
     try:
         if id:
