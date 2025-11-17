@@ -251,9 +251,9 @@ def create_new_drug_modal():
     if hasattr(sys, "_MEIPASS"):
         base_path = sys._MEIPASS
     else:
-        base_path = os.path.dirname(__file__)
+        base_path = os.path.join(os.path.dirname(__file__), "..")
 
-    drug_list_path = os.path.join(base_path, "..", "assets", "drug_list.txt")
+    drug_list_path = os.path.join(base_path, "assets", "drug_list.txt")
 
     try:
         with open(drug_list_path, "r", encoding="utf-8") as f:
@@ -1357,7 +1357,11 @@ def save_movement(
         missing_fields.append("Caixas Completas (deve ser ≥ 0)")
     if pieces is None or pieces < 0:
         missing_fields.append("Peças Fora de Caixa (deve ser ≥ 0)")
-    if (boxes is None or boxes == 0) and (pieces is None or pieces == 0) and (mov_type != "Inventario"):
+    if (
+        (boxes is None or boxes == 0)
+        and (pieces is None or pieces == 0)
+        and (mov_type != "Inventario")
+    ):
         missing_fields.append("Total de Peças (deve ser > 0)")
     if not mov_type or mov_type.strip() == "":
         missing_fields.append("Tipo de Movimento")
