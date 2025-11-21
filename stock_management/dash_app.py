@@ -1275,8 +1275,17 @@ def update_movement_total(boxes, pieces, drug_id, newly_created_id):
     drug = sql_utils.parse_drug(conn, "drugs", row)
     conn.close()
 
-    boxes = boxes or 0
-    pieces = pieces or 0
+    # Safely convert inputs to int
+    try:
+        boxes = int(boxes) if boxes else 0
+    except ValueError:
+        boxes = 0
+    
+    try:
+        pieces = int(pieces) if pieces else 0
+    except ValueError:
+        pieces = 0
+
     pieces_per_box = drug.get("pieces_per_box", 0)
 
     total = boxes * pieces_per_box + pieces
@@ -1324,13 +1333,22 @@ def save_movement(
     )
 
     # Check if both boxes and pieces are empty
-    if boxes == "" and pieces == "":
+    if (boxes is None or boxes == "") and (pieces is None or pieces == ""):
         alert = dbc.Alert(
             "Por favor, preencha pelo menos um dos campos: Caixas Completas ou Peças Fora de Caixa.",
             color="warning",
             dismissable=True,
         )
-        return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
+        return (
+            alert,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            True,
+        )
 
     # Parse boxes and pieces to int
     try:
@@ -1360,7 +1378,16 @@ def save_movement(
         alert = dbc.Alert(
             "Erro: Medicamento não selecionado", color="danger", dismissable=True
         )
-        return (alert, mov_date, origin, str(boxes), str(pieces), mov_type, None, True)
+        return (
+            alert,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            True,
+        )
 
     # Set default when not provided and not mandatory
     if mov_type == "Inventario" and (not origin or origin.strip() == ""):
@@ -1394,7 +1421,16 @@ def save_movement(
         )
         print(f"  -> Validation failed: {error_message}")
         alert = dbc.Alert(error_message, color="danger", dismissable=True)
-        return (alert, mov_date, origin, str(boxes), str(pieces), mov_type, None, True)
+        return (
+            alert,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            dash.no_update,
+            True,
+        )
     else:
         alert = None
 
@@ -1435,14 +1471,32 @@ def save_movement(
                 color="danger",
                 dismissable=True,
             )
-            return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
+            return (
+                alert,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                dash.no_update,
+                True,
+            )
     except Exception as e:
         print(f"  -> Exception occurred: {str(e)}")
         import traceback
 
         traceback.print_exc()
     alert = dbc.Alert(f"Erro inesperado: {str(e)}", color="danger", dismissable=True)
-    return (alert, mov_date, origin, str(boxes), str(pieces), mov_type, None, True)
+    return (
+        alert,
+        dash.no_update,
+        dash.no_update,
+        dash.no_update,
+        dash.no_update,
+        dash.no_update,
+        dash.no_update,
+        True,
+    )
 
 
 # Report Modal callbacks
