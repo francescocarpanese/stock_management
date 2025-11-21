@@ -2,6 +2,52 @@ from datetime import datetime, date
 import pandas as pd
 
 
+def get_or_create_drug_name(conn, name):
+    c = conn.cursor()
+    c.execute("SELECT id FROM drug_names WHERE name = ?", (name,))
+    row = c.fetchone()
+    if row:
+        c.close()
+        return row[0]
+    else:
+        c.execute("INSERT INTO drug_names (name) VALUES (?)", (name,))
+        new_id = c.lastrowid
+        c.close()
+        conn.commit()
+        return new_id
+
+
+def get_or_create_origin_destination(conn, name):
+    c = conn.cursor()
+    c.execute("SELECT id FROM origin_destination WHERE name = ?", (name,))
+    row = c.fetchone()
+    if row:
+        c.close()
+        return row[0]
+    else:
+        c.execute("INSERT INTO origin_destination (name) VALUES (?)", (name,))
+        new_id = c.lastrowid
+        c.close()
+        conn.commit()
+        return new_id
+
+
+def get_drug_name_by_id(conn, id):
+    c = conn.cursor()
+    c.execute("SELECT name FROM drug_names WHERE id = ?", (id,))
+    row = c.fetchone()
+    c.close()
+    return row[0] if row else None
+
+
+def get_origin_destination_by_id(conn, id):
+    c = conn.cursor()
+    c.execute("SELECT name FROM origin_destination WHERE id = ?", (id,))
+    row = c.fetchone()
+    c.close()
+    return row[0] if row else None
+
+
 def add_drug(
     conn, name, dose, units, expiration, pieces_per_box, drug_type, lote, stock=0
 ):

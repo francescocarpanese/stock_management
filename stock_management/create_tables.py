@@ -8,6 +8,24 @@ def create_all_tables(path_to_database):
 
     # Create a table and insert some data
     c.execute(
+        """CREATE TABLE IF NOT EXISTS drug_names
+        (
+            id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE
+        )
+        """
+    )
+
+    c.execute(
+        """CREATE TABLE IF NOT EXISTS origin_destination
+        (
+            id INTEGER PRIMARY KEY,
+            name TEXT UNIQUE
+        )
+        """
+    )
+
+    c.execute(
         """CREATE TABLE drugs 
         (
             id INTEGER PRIMARY KEY,
@@ -19,7 +37,8 @@ def create_all_tables(path_to_database):
             type TEXT,
             lote TEXT,
             current_stock INTEGER DEFAULT 0,
-            last_inventory_date DATE DEFAULT '1990-01-01'
+            last_inventory_date DATE DEFAULT '1990-01-01',
+            FOREIGN KEY (name) REFERENCES drug_names(name)
             )
         """
     )
@@ -35,7 +54,8 @@ def create_all_tables(path_to_database):
             signature TEXT,
             entry_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             drug_id INTEGER,
-            FOREIGN KEY (drug_id) REFERENCES drugs(id)
+            FOREIGN KEY (drug_id) REFERENCES drugs(id),
+            FOREIGN KEY (destination_origin) REFERENCES origin_destination(name)
             )
         """
     )
