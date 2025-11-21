@@ -764,10 +764,11 @@ app.layout = dbc.Container(
 @app.callback(
     Output("drug-name", "value", allow_duplicate=True),
     Input("drug-name-dropdown", "value"),
+    State("drug-name", "value"),
     prevent_initial_call=True,
 )
-def fill_drug_name_input(selected_name):
-    return selected_name if selected_name else ""
+def fill_drug_name_input(selected_name, current_val):
+    return selected_name if selected_name else dash.no_update
 
 
 @app.callback(Output("search-input", "options"), Input("search-input", "search_value"))
@@ -924,6 +925,7 @@ def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
         Output("drug-modal-alert", "children"),
         Output("drug-name", "value"),
         Output("drug-name-dropdown", "value"),
+        Output("drug-name-dropdown", "options"),
         Output("drug-expiration", "date"),
         Output("drug-pieces-per-box", "value"),
         Output("drug-form", "value"),
@@ -940,6 +942,7 @@ def toggle_drug_modal(n_new, n_correct, n_close, is_open, selected_id):
     ],
     [
         State("drug-name", "value"),
+        State("drug-name-dropdown", "options"),
         State("drug-expiration", "date"),
         State("drug-pieces-per-box", "value"),
         State("drug-form", "value"),
@@ -954,6 +957,7 @@ def manage_drug_form(
     n_correct,
     n_save,
     name,
+    current_options,
     expiration,
     pieces,
     form,
@@ -967,22 +971,35 @@ def manage_drug_form(
     # Handle opening modal for a new drug: clear form fields
     if trigger_id == "btn-new-drug":
         today = date.today()
-        # Return: alert, drug-name, drug-name-dropdown, expiration, pieces, form, lote, current-edit, refresh, is_open, newly_created
-        return None, "", None, today, None, None, "", None, None, True, None
+        # Return: alert, drug-name, drug-name-dropdown, options, expiration, pieces, form, lote, current-edit, refresh, is_open, newly_created
+        return None, "", None, dash.no_update, today, None, None, "", None, None, True, None
 
     # Handle loading drug for edit
     if trigger_id == "btn-correct-drug":
         if not selected_id:
             # No selection when trying to correct: keep modal state open but empty
-            return None, "", None, date.today(), 0, None, "", None, None, True, None
+            return None, "", None, dash.no_update, date.today(), 0, None, "", None, None, True, None
         conn = get_db_connection()
         row = sql_utils.get_row(conn, "drugs", selected_id)
         drug = sql_utils.parse_drug(conn, "drugs", row)
         conn.close()
+        
+        drug_name = drug.get("name", "")
+        
+        # Update options if drug name is not in them
+        updated_options = dash.no_update
+        if drug_name and current_options is not None:
+            existing_values = [opt["value"] for opt in current_options]
+            if drug_name not in existing_values:
+                updated_options = current_options + [{"label": drug_name, "value": drug_name}]
+                # Sort options alphabetically
+                updated_options = sorted(updated_options, key=lambda x: x["label"])
+
         return (
             None,  # No alert
-            drug.get("name", ""),
-            drug.get("name", ""),
+            drug_name,
+            drug_name,
+            updated_options,
             drug.get("expiration", date.today()),
             drug.get("pieces_per_box", 0),
             drug.get("type", ""),
@@ -1001,6 +1018,7 @@ def manage_drug_form(
                 None,
                 name,
                 name if name else None,
+                dash.no_update,
                 expiration,
                 pieces,
                 form,
@@ -1033,6 +1051,7 @@ def manage_drug_form(
                 alert,
                 name,
                 name if name else None,
+                dash.no_update,
                 expiration,
                 pieces,
                 form,
@@ -1070,6 +1089,7 @@ def manage_drug_form(
                 alert,
                 "",
                 None,
+                dash.no_update,
                 today,
                 0,
                 None,
@@ -1089,6 +1109,7 @@ def manage_drug_form(
                 alert,
                 name,
                 name if name else None,
+                dash.no_update,
                 expiration,
                 pieces,
                 form,
@@ -1104,6 +1125,7 @@ def manage_drug_form(
         None,
         name,
         name if name else None,
+        dash.no_update,
         expiration,
         pieces,
         form,
