@@ -518,7 +518,7 @@ def create_new_movement_modal():
                                     dbc.Input(
                                         id="movement-boxes",
                                         type="number",
-                                        value=0,
+                                        value="",
                                         style={"fontSize": "16px"},
                                     ),
                                 ],
@@ -537,7 +537,7 @@ def create_new_movement_modal():
                                     dbc.Input(
                                         id="movement-pieces",
                                         type="number",
-                                        value=0,
+                                        value="",
                                         style={"fontSize": "16px"},
                                     ),
                                 ],
@@ -1253,7 +1253,7 @@ def load_drug_info_for_movement(n_clicks, newly_created_id, selected_id):
     movement_type_value = "Entrada" if show_initial_stock_banner else None
 
     # Reset boxes and pieces to 0
-    return drug_info, movement_type_value, alert, 0, 0
+    return drug_info, movement_type_value, alert, "", ""
 
 
 @callback(
@@ -1323,6 +1323,25 @@ def save_movement(
         f"  mov_date={mov_date}, origin={origin}, boxes={boxes}, pieces={pieces}, mov_type={mov_type}"
     )
 
+    # Check if both boxes and pieces are empty
+    if boxes == "" and pieces == "":
+        alert = dbc.Alert(
+            "Por favor, preencha pelo menos um dos campos: Caixas Completas ou Peças Fora de Caixa.",
+            color="warning",
+            dismissable=True,
+        )
+        return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
+
+    # Parse boxes and pieces to int
+    try:
+        boxes = int(boxes) if boxes else 0
+    except ValueError:
+        boxes = 0
+    try:
+        pieces = int(pieces) if pieces else 0
+    except ValueError:
+        pieces = 0
+
     if not n_clicks:
         print("  -> Returning: n_clicks is falsy")
         return (
@@ -1341,7 +1360,7 @@ def save_movement(
         alert = dbc.Alert(
             "Erro: Medicamento não selecionado", color="danger", dismissable=True
         )
-        return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
+        return (alert, mov_date, origin, str(boxes), str(pieces), mov_type, None, True)
 
     # Set default when not provided and not mandatory
     if mov_type == "Inventario" and (not origin or origin.strip() == ""):
@@ -1375,7 +1394,7 @@ def save_movement(
         )
         print(f"  -> Validation failed: {error_message}")
         alert = dbc.Alert(error_message, color="danger", dismissable=True)
-        return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
+        return (alert, mov_date, origin, str(boxes), str(pieces), mov_type, None, True)
     else:
         alert = None
 
@@ -1409,7 +1428,7 @@ def save_movement(
                 "Movimento guardado com sucesso!", color="success", duration=3000
             )
             # Clear form fields, trigger table refresh, and close modal
-            return (alert, today, "", 0, 0, "", {"timestamp": today.isoformat()}, False)
+            return (alert, today, "", "", "", "", {"timestamp": today.isoformat()}, False)
         else:
             alert = dbc.Alert(
                 f"Erro ao guardar movimento: {error_msg}",
@@ -1423,7 +1442,7 @@ def save_movement(
 
         traceback.print_exc()
     alert = dbc.Alert(f"Erro inesperado: {str(e)}", color="danger", dismissable=True)
-    return (alert, mov_date, origin, boxes, pieces, mov_type, None, True)
+    return (alert, mov_date, origin, str(boxes), str(pieces), mov_type, None, True)
 
 
 # Report Modal callbacks
