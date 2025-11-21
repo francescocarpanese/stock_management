@@ -175,11 +175,15 @@ def save_move(values, connection, drug, movement_id=None):
     pieces_moved = get_tot_pieces_moved_casted(values, drug)
 
     try:
+        # Ensure origin_destination exists in the lookup table
+        origin_destiny_name = values.get("in_origin_destiny", "")
+        sql_utils.get_or_create_origin_destination(connection, origin_destiny_name)
+
         if movement_id:
             sql_utils.update_movement(
                 conn=connection,
                 date_movement=values["in_data_movido"],
-                destination_origin=values.get("in_origin_destiny", ""),
+                destination_origin=origin_destiny_name,
                 pieces_moved=pieces_moved,
                 movement_type=mov_type,
                 signature=values.get("in_signature", ""),
@@ -189,7 +193,7 @@ def save_move(values, connection, drug, movement_id=None):
             sql_utils.add_movement(
                 conn=connection,
                 date_movement=values["in_data_movido"],
-                destination_origin=values.get("in_origin_destiny", ""),
+                destination_origin=origin_destiny_name,
                 pieces_moved=pieces_moved,
                 movement_type=mov_type,
                 signature=values.get("in_signature", ""),

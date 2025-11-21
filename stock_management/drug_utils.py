@@ -65,6 +65,9 @@ def save_drug(values, connection, id=None):
     units = ""
 
     try:
+        # Ensure drug name exists in the lookup table
+        sql_utils.get_or_create_drug_name(connection, name_in)
+
         if id:
             sql_utils.update_drug(
                 conn=connection,

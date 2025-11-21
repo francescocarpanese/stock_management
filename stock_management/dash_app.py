@@ -247,19 +247,15 @@ def create_new_drug_modal():
     """Create modal for adding/editing drugs"""
     today = date.today()
 
-    # Read drug names from assets/drug_list.txt
-    if hasattr(sys, "_MEIPASS"):
-        base_path = sys._MEIPASS
-    else:
-        base_path = os.path.join(os.path.dirname(__file__), "..")
-
-    drug_list_path = os.path.join(base_path, "assets", "drug_list.txt")
-
+    # Read drug names from database
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        with open(drug_list_path, "r", encoding="utf-8") as f:
-            drug_names = [line.strip() for line in f if line.strip()]
+        cursor.execute("SELECT name FROM drug_names ORDER BY name")
+        drug_names = [row[0] for row in cursor.fetchall()]
     except Exception:
         drug_names = []
+    conn.close()
 
     drug_name_options = [{"label": name, "value": name} for name in drug_names]
 
@@ -493,16 +489,38 @@ def create_new_movement_modal():
                                             "fontWeight": "bold",
                                         },
                                     ),
-                                    dbc.Input(
-                                        id="movement-origin",
-                                        type="text",
-                                        style={"fontSize": "16px"},
-                                    ),
                                 ],
-                                md=6,
-                                className="mb-3",
+                                width=12,
                             ),
-                        ]
+                        ],
+                        className="mb-1",
+                    ),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                dcc.Dropdown(
+                                    id="movement-origin-dropdown",
+                                    options=[],  # Will be populated by callback
+                                    placeholder="Selecione...",
+                                    searchable=True,
+                                    clearable=True,
+                                    style={"fontSize": "16px"},
+                                ),
+                                width=6,
+                            ),
+                            dbc.Col(
+                                dcc.Input(
+                                    id="movement-origin",
+                                    type="text",
+                                    placeholder="Ou escreva...",
+                                    style={"fontSize": "16px", "width": "100%"},
+                                    debounce=True,
+                                    value="",
+                                ),
+                                width=6,
+                            ),
+                        ],
+                        className="mb-3",
                     ),
                     dbc.Row(
                         [
@@ -1193,6 +1211,7 @@ def toggle_movement_modal(n_new, n_close, newly_created_id, is_open, selected_id
         Output("movement-modal-alert", "children", allow_duplicate=True),
         Output("movement-boxes", "value", allow_duplicate=True),
         Output("movement-pieces", "value", allow_duplicate=True),
+        Output("movement-origin-dropdown", "options"),
     ],
     [Input("btn-new-movement", "n_clicks"), Input("newly-created-drug-id", "data")],
     [State("selected-drug-id", "data")],
@@ -1218,16 +1237,26 @@ def load_drug_info_for_movement(n_clicks, newly_created_id, selected_id):
                 dash.no_update,
                 dash.no_update,
                 dash.no_update,
+                dash.no_update,
             )
     elif trigger_id == "btn-new-movement" and selected_id:
         drug_id = selected_id
 
     if not drug_id:
-        return "Selecione um medicamento primeiro", None, None, 0, 0
+        return "Selecione um medicamento primeiro", None, None, 0, 0, []
 
     conn = get_db_connection()
     row = sql_utils.get_row(conn, "drugs", drug_id)
     drug = sql_utils.parse_drug(conn, "drugs", row)
+    
+    # Get origin/destination options
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT name FROM origin_destination ORDER BY name")
+        origin_options = [{"label": row[0], "value": row[0]} for row in cursor.fetchall()]
+    except Exception:
+        origin_options = []
+    
     conn.close()
 
     # Get current stock from the drug record
@@ -1275,7 +1304,7 @@ def load_drug_info_for_movement(n_clicks, newly_created_id, selected_id):
     movement_type_value = "Entrada" if show_initial_stock_banner else None
 
     # Reset boxes and pieces to 0
-    return drug_info, movement_type_value, alert, "", ""
+    return drug_info, movement_type_value, alert, "", "", origin_options
 
 
 @callback(
@@ -1315,10 +1344,23 @@ def update_movement_total(boxes, pieces, drug_id, newly_created_id):
 
 
 @callback(
+    Output("movement-origin", "value", allow_duplicate=True),
+    Input("movement-origin-dropdown", "value"),
+    prevent_initial_call=True,
+)
+def update_movement_origin_from_dropdown(value):
+    """Update movement origin input when dropdown is selected"""
+    if value:
+        return value
+    return dash.no_update
+
+
+@callback(
     [
         Output("movement-modal-alert", "children", allow_duplicate=True),
         Output("movement-date", "date"),
         Output("movement-origin", "value"),
+        Output("movement-origin-dropdown", "value"),
         Output("movement-boxes", "value"),
         Output("movement-pieces", "value"),
         Output("movement-type", "value", allow_duplicate=True),
@@ -1369,6 +1411,7 @@ def save_movement(
             dash.no_update,
             dash.no_update,
             dash.no_update,
+            dash.no_update,
             True,
         )
 
@@ -1393,6 +1436,7 @@ def save_movement(
             dash.no_update,
             dash.no_update,
             dash.no_update,
+            dash.no_update,
         )
 
     if not drug_id:
@@ -1402,6 +1446,7 @@ def save_movement(
         )
         return (
             alert,
+            dash.no_update,
             dash.no_update,
             dash.no_update,
             dash.no_update,
@@ -1451,6 +1496,7 @@ def save_movement(
             dash.no_update,
             dash.no_update,
             dash.no_update,
+            dash.no_update,
             True,
         )
     else:
@@ -1486,7 +1532,7 @@ def save_movement(
                 "Movimento guardado com sucesso!", color="success", duration=3000
             )
             # Clear form fields, trigger table refresh, and close modal
-            return (alert, today, "", "", "", "", {"timestamp": today.isoformat()}, False)
+            return (alert, today, "", None, "", "", "", {"timestamp": today.isoformat()}, False)
         else:
             alert = dbc.Alert(
                 f"Erro ao guardar movimento: {error_msg}",
@@ -1495,6 +1541,7 @@ def save_movement(
             )
             return (
                 alert,
+                dash.no_update,
                 dash.no_update,
                 dash.no_update,
                 dash.no_update,
@@ -1511,6 +1558,7 @@ def save_movement(
     alert = dbc.Alert(f"Erro inesperado: {str(e)}", color="danger", dismissable=True)
     return (
         alert,
+        dash.no_update,
         dash.no_update,
         dash.no_update,
         dash.no_update,
