@@ -772,7 +772,7 @@ def fill_drug_name_input(selected_name):
 
 @app.callback(Output("search-input", "options"), Input("search-input", "search_value"))
 def update_search_dropdown_options(search_value):
-    """Filter dropdown options to show only names that start with the search value"""
+    """Filter dropdown options to show names that start with the search value first, then those that contain it"""
     # Get unique drug names from database
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -784,11 +784,11 @@ def update_search_dropdown_options(search_value):
     if not search_value:
         return [{"label": name, "value": name} for name in drug_names]
 
-    # Filter names that start with the search value (case-insensitive)
+    # Filter names: first those that start with, then those that contain but don't start with
     search_lower = search_value.lower()
-    filtered_names = [
-        name for name in drug_names if name.lower().startswith(search_lower)
-    ]
+    starts_with = [name for name in drug_names if name.lower().startswith(search_lower)]
+    contains = [name for name in drug_names if search_lower in name.lower() and name not in starts_with]
+    filtered_names = starts_with + contains
 
     return [{"label": name, "value": name} for name in filtered_names]
 
