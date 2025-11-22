@@ -483,7 +483,7 @@ def create_new_movement_modal():
                             dbc.Col(
                                 [
                                     dbc.Label(
-                                        "Origem or Destino:",
+                                        "Origem o Destino:",
                                         style={
                                             "fontSize": "16px",
                                             "fontWeight": "bold",
@@ -830,7 +830,11 @@ def update_search_dropdown_options(search_value):
     # Filter names: first those that start with, then those that contain but don't start with
     search_lower = search_value.lower()
     starts_with = [name for name in drug_names if name.lower().startswith(search_lower)]
-    contains = [name for name in drug_names if search_lower in name.lower() and name not in starts_with]
+    contains = [
+        name
+        for name in drug_names
+        if search_lower in name.lower() and name not in starts_with
+    ]
     filtered_names = starts_with + contains
 
     return [{"label": name, "value": name} for name in filtered_names]
@@ -890,8 +894,8 @@ def update_table(search_text, expired, out_stock, present, refresh_trigger):
         },
         style_cell={
             "textAlign": "left",
-                "padding": "14px",
-                "fontSize": "16px",
+            "padding": "14px",
+            "fontSize": "16px",
             "fontFamily": "Arial",
             "minWidth": "100px",
         },
@@ -1014,26 +1018,54 @@ def manage_drug_form(
     if trigger_id == "btn-new-drug":
         today = date.today()
         # Return: alert, drug-name, drug-name-dropdown, options, expiration, pieces, form, lote, current-edit, refresh, is_open, newly_created
-        return None, "", None, dash.no_update, today, None, None, "", None, None, True, None
+        return (
+            None,
+            "",
+            None,
+            dash.no_update,
+            today,
+            None,
+            None,
+            "",
+            None,
+            None,
+            True,
+            None,
+        )
 
     # Handle loading drug for edit
     if trigger_id == "btn-correct-drug":
         if not selected_id:
             # No selection when trying to correct: keep modal state open but empty
-            return None, "", None, dash.no_update, date.today(), 0, None, "", None, None, True, None
+            return (
+                None,
+                "",
+                None,
+                dash.no_update,
+                date.today(),
+                0,
+                None,
+                "",
+                None,
+                None,
+                True,
+                None,
+            )
         conn = get_db_connection()
         row = sql_utils.get_row(conn, "drugs", selected_id)
         drug = sql_utils.parse_drug(conn, "drugs", row)
         conn.close()
-        
+
         drug_name = drug.get("name", "")
-        
+
         # Update options if drug name is not in them
         updated_options = dash.no_update
         if drug_name and current_options is not None:
             existing_values = [opt["value"] for opt in current_options]
             if drug_name not in existing_values:
-                updated_options = current_options + [{"label": drug_name, "value": drug_name}]
+                updated_options = current_options + [
+                    {"label": drug_name, "value": drug_name}
+                ]
                 # Sort options alphabetically
                 updated_options = sorted(updated_options, key=lambda x: x["label"])
 
@@ -1272,15 +1304,17 @@ def load_drug_info_for_movement(n_clicks, newly_created_id, selected_id):
     conn = get_db_connection()
     row = sql_utils.get_row(conn, "drugs", drug_id)
     drug = sql_utils.parse_drug(conn, "drugs", row)
-    
+
     # Get origin/destination options
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT name FROM origin_destination ORDER BY name")
-        origin_options = [{"label": row[0], "value": row[0]} for row in cursor.fetchall()]
+        origin_options = [
+            {"label": row[0], "value": row[0]} for row in cursor.fetchall()
+        ]
     except Exception:
         origin_options = []
-    
+
     conn.close()
 
     # Get current stock from the drug record
@@ -1355,7 +1389,7 @@ def update_movement_total(boxes, pieces, drug_id, newly_created_id):
         boxes = int(boxes) if boxes else 0
     except ValueError:
         boxes = 0
-    
+
     try:
         pieces = int(pieces) if pieces else 0
     except ValueError:
@@ -1556,7 +1590,17 @@ def save_movement(
                 "Movimento guardado com sucesso!", color="success", duration=3000
             )
             # Clear form fields, trigger table refresh, and close modal
-            return (alert, today, "", None, "", "", "", {"timestamp": today.isoformat()}, False)
+            return (
+                alert,
+                today,
+                "",
+                None,
+                "",
+                "",
+                "",
+                {"timestamp": today.isoformat()},
+                False,
+            )
         else:
             alert = dbc.Alert(
                 f"Erro ao guardar movimento: {error_msg}",
