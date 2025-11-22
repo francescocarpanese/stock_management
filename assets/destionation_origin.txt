@@ -1,0 +1,17 @@
+deposito
+farmacia interna
+farmacia externa
+maternidade
+med. homem
+med. mulher
+pediatria
+tisiologia
+b. operatorio
+lab. central
+lab. tisiol
+b. urgencia
+consulta externa
+S.A.T
+saude pub.
+ofertas
+outro
