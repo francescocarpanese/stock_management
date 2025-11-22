@@ -747,22 +747,46 @@ app.layout = dbc.Container(
             + """
             .dash-table-container .dash-spreadsheet-inner input[type="radio"],
             .dash-table-container .dash-spreadsheet-inner input[type="checkbox"] {
-                width: 24px !important;
-                height: 24px !important;
+                width: 44px !important;
+                height: 44px !important;
                 cursor: pointer;
+                display: block;
+                margin: 0 auto;
+                transform: translateY(0);
             }
-            
+
             .dash-table-container .dash-spreadsheet-inner td {
                 vertical-align: middle;
+                overflow: visible;
+                padding: 0 6px;
             }
-            
+
+            /* Force the first column (selection/radio column) to be wide enough */
+            .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner table thead tr th:first-child,
+            .dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner table tbody tr td:first-child {
+                min-width: 120px !important;
+                width: 120px !important;
+                max-width: 120px !important;
+                text-align: center !important;
+                overflow: visible !important;
+                padding: 8px !important;
+            }
+
             .dash-spreadsheet tbody tr {
                 cursor: pointer;
             }
-            
+
             .dash-spreadsheet tbody tr:hover {
                 background-color: #e7f0ff !important;
             }
+
+            /* Improve header and cell readability on small screens */
+            .dash-spreadsheet .dash-header {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
         """,
         ),
         create_navbar(),
@@ -866,31 +890,31 @@ def update_table(search_text, expired, out_stock, present, refresh_trigger):
         },
         style_cell={
             "textAlign": "left",
-            "padding": "16px",
-            "fontSize": "15px",
+                "padding": "14px",
+                "fontSize": "16px",
             "fontFamily": "Arial",
             "minWidth": "100px",
         },
         style_cell_conditional=[
             {
-                "if": {"column_id": ""},
-                "minWidth": "50px",
-                "width": "50px",
-                "maxWidth": "50px",
-                "textAlign": "center",
+                "if": {"column_id": "Nome"},
+                "minWidth": "300px",
+                "width": "300px",
             },
             {
-                "if": {"column_id": "Nome"},
-                "minWidth": "200px",
-                "width": "200px",
+                "if": {"column_id": "Peças/Caixa"},
+                "minWidth": "80px",
+                "width": "100px",
+                "maxWidth": "120px",
+                "textAlign": "center",
             },
         ],
         style_header={
             "backgroundColor": "#007bff",
             "color": "white",
             "fontWeight": "bold",
-            "fontSize": "16px",
-            "padding": "16px",
+            "fontSize": "18px",
+            "padding": "14px",
         },
         style_data_conditional=[
             {"if": {"row_index": "odd"}, "backgroundColor": "#f8f9fa"},
