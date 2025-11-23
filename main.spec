@@ -8,7 +8,7 @@ a = Analysis(
     ['stock_management\\dash_app.py'],
     pathex=[],
     binaries=[],
-    datas=[('assets', 'assets')],
+    datas=[],
     hiddenimports=['dash_bootstrap_components', 'plotly', 'pandas', 'sqlite3'],
     hookspath=[],
     hooksconfig={},
