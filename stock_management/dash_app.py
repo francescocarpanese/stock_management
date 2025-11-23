@@ -907,10 +907,17 @@ def update_table(search_text, expired, out_stock, present, refresh_trigger):
             },
             {
                 "if": {"column_id": "Peças/Caixa"},
-                "minWidth": "80px",
-                "width": "100px",
+                "minWidth": "140px",
+                "width": "140px",
+                "maxWidth": "160px",
+                "textAlign": "left",
+            },
+            {
+                "if": {"column_id": "Expiração"},
+                "minWidth": "100px",
+                "width": "110px",
                 "maxWidth": "120px",
-                "textAlign": "center",
+                "textAlign": "left",
             },
         ],
         style_header={
