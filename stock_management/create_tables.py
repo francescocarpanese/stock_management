@@ -60,6 +60,8 @@ def create_all_tables(path_to_database):
         """
     )
 
+    c.execute("PRAGMA db_version = 1")
+
     # Store the timestamp of the modification of an entry
     c.execute(
         """CREATE TRIGGER update_movements_entry_datetime
