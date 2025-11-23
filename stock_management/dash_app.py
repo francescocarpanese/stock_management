@@ -501,7 +501,7 @@ def create_new_movement_modal():
                                 dcc.Dropdown(
                                     id="movement-origin-dropdown",
                                     options=[],  # Will be populated by callback
-                                    placeholder="Selecione...",
+                                    placeholder="Selecione da lista...",
                                     searchable=True,
                                     clearable=True,
                                     style={"fontSize": "16px"},
@@ -512,7 +512,7 @@ def create_new_movement_modal():
                                 dcc.Input(
                                     id="movement-origin",
                                     type="text",
-                                    placeholder="Ou escreva...",
+                                    placeholder="Ou escreva se não estiver na lista.",
                                     style={"fontSize": "16px", "width": "100%"},
                                     debounce=True,
                                     value="",
