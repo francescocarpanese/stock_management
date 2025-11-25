@@ -32,12 +32,12 @@ def generate_reports(db_connection, start_date=None, end_date=None):
 
     # Save consumption report grouped by name, dose, type
     try:
-        reports_utils.save_xlsx_consumption_nome_dose_type(
+        reports_utils.save_xlsx_consumption_by_drug_name(
             db_connection=db_connection,
             start_date=start_date,
             end_date=end_date,
             folder_path=agg_name_path,
-            file_name="consumption_nome_dose_type.xlsx",
+            file_name="consumo_por_nome_medicamento.xlsx",
         )
     except Exception as e:
         errors.append(f"Erro ao gerar o relatorio de consumo por nome, dose e tipo: {str(e)}")
@@ -49,7 +49,7 @@ def generate_reports(db_connection, start_date=None, end_date=None):
             start_date=start_date,
             end_date=end_date,
             folder_path=agg_ID_path,
-            file_name="consumption_ID.xlsx",
+            file_name="consumo_por_lote.xlsx",
         )
     except Exception as e:
         errors.append(f"Erro ao gerar o relatorio de consumo por ID: {str(e)}")
@@ -70,7 +70,7 @@ def generate_reports(db_connection, start_date=None, end_date=None):
         reports_utils.dump_full_dataset(
             db_connection=db_connection,
             folder_path=folder_base_path,
-            file_name="full_database.xlsx",
+            file_name="todo_movimento.xlsx",
         )
     except Exception as e:
         errors.append(f"Erro ao gerar o dump da base de dados: {str(e)}")
@@ -80,15 +80,17 @@ def generate_reports(db_connection, start_date=None, end_date=None):
         reports_utils.gen_mov_report_ID(
             db_connection=db_connection,
             folder_path=agg_ID_path,
+            file_name="movimento_por_lote.txt",
         )
     except Exception as e:
         errors.append(f"Erro ao gerar o relatorio de movimentos por ID: {str(e)}")
 
     # Save movement report per nome, dose, type
     try:
-        reports_utils.gen_mov_report_nome_dose_type(
+        reports_utils.gen_mov_report_per_nome(
             db_connection=db_connection,
             folder_path=agg_name_path,
+            file_name="movimento_por_nome.txt",
         )
     except Exception as e:
         errors.append(f"Erro ao gerar o relatorio de movimentos por nome, dose e tipo: {str(e)}")
@@ -98,15 +100,17 @@ def generate_reports(db_connection, start_date=None, end_date=None):
         reports_utils.save_stock_ID_xlsx(
             db_connection=db_connection,
             folder_path=folder_base_path,
+            file_name="stock_por_lote.xlsx",
         )
     except Exception as e:
         errors.append(f"Erro ao gerar o relatorio de stock por ID: {str(e)}")
 
     # Save stock report per nome, dose, type
     try:
-        reports_utils.save_stock_nome_dose_type_xlsx(
+        reports_utils.save_stock_per_nome(
             db_connection=db_connection,
             folder_path=folder_base_path,
+            file_name="stock_por_nome_medicamento.xlsx",
         )
     except Exception as e:
         errors.append(f"Erro ao gerar o relatorio de stock por nome, dose e tipo: {str(e)}")

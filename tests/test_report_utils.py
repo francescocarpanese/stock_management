@@ -479,19 +479,17 @@ def test_compute_stock_per_ID(
             date(3000, 1, 31),
             pd.DataFrame(
                 [
-                    # name, dose, entry, exit, stock, last_inventory_date, last_inventory_stock
-                    ["test_drug", 1, 20, 3, 17, date(1900, 1, 1), None],
-                    ["test_drug", 10, 10, 2, 8, date(1900, 1, 1), None],
-                    ["test_drug2", 1, 10, 2, 8, date(1900, 1, 1), None],
-                    ["test_drug3", 1, 10, 2, 19, date(2023, 1, 3), 20],
-                    ["test_drug6", 1, 10, 11, 0, date(1900, 1, 1), None],
-                    ["test_drug7", 1, 10, 11, 20, date(2023, 1, 3), 20],
-                    ["test_drug8", 1, 10, 1, 9, date(1900, 1, 1), None],
-                    ["test_drug9", 1, 10, 6, 4, date(1900, 1, 1), None],
+                    # name, entry, exit, stock, last_inventory_date, last_inventory_stock
+                    ["test_drug", 30, 5, 25, date(1900, 1, 1), None],
+                    ["test_drug2", 10, 2, 8, date(1900, 1, 1), None],
+                    ["test_drug3", 10, 2, 19, date(2023, 1, 3), 20],
+                    ["test_drug6", 10, 11, 0, date(1900, 1, 1), None],
+                    ["test_drug7", 10, 11, 20, date(2023, 1, 3), 20],
+                    ["test_drug8", 10, 1, 9, date(1900, 1, 1), None],
+                    ["test_drug9", 10, 6, 4, date(1900, 1, 1), None],
                 ],
                 columns=[
                     "name",
-                    "dose",
                     "entry",
                     "exit",
                     "stock",
@@ -505,19 +503,17 @@ def test_compute_stock_per_ID(
             date(2023, 1, 2),
             pd.DataFrame(
                 [
-                    # name, dose, entry, exit, stock, last_inventory_date, last_inventory_stock
-                    ["test_drug", 1, 20, 3, 17, date(1900, 1, 1), None],
-                    ["test_drug", 10, 10, 1, 9, date(1900, 1, 1), None],
-                    ["test_drug2", 1, 10, 2, 8, date(1900, 1, 1), None],
-                    ["test_drug3", 1, 10, 1, 9, date(1900, 1, 1), None],
-                    ["test_drug6", 1, 10, 11, 0, date(1900, 1, 1), None],
-                    ["test_drug7", 1, 10, 11, 0, date(1900, 1, 1), None],
-                    ["test_drug8", 1, 10, 1, 9, date(1900, 1, 1), None],
-                    ["test_drug9", 1, 10, 3, 7, date(1900, 1, 1), None],
+                    # name, entry, exit, stock, last_inventory_date, last_inventory_stock
+                    ["test_drug", 30, 4, 26, date(1900, 1, 1), None],
+                    ["test_drug2", 10, 2, 8, date(1900, 1, 1), None],
+                    ["test_drug3", 10, 1, 9, date(1900, 1, 1), None],
+                    ["test_drug6", 10, 11, 0, date(1900, 1, 1), None],
+                    ["test_drug7", 10, 11, 0, date(1900, 1, 1), None],
+                    ["test_drug8", 10, 1, 9, date(1900, 1, 1), None],
+                    ["test_drug9", 10, 3, 7, date(1900, 1, 1), None],
                 ],
                 columns=[
                     "name",
-                    "dose",
                     "entry",
                     "exit",
                     "stock",
@@ -531,19 +527,17 @@ def test_compute_stock_per_ID(
             date(2023, 1, 31),
             pd.DataFrame(
                 [
-                    # name, dose, entry, exit, stock, last_inventory_date, last_inventory_stock
-                    ["test_drug", 1, 20, 3, 17, date(1900, 1, 1), None],
-                    ["test_drug", 10, 10, 1, 9, date(1900, 1, 1), None],
-                    ["test_drug2", 1, 10, 2, 8, date(1900, 1, 1), None],
-                    ["test_drug3", 1, 10, 2, 19, date(2023, 1, 3), 20],
-                    ["test_drug6", 1, 10, 11, 0, date(1900, 1, 1), None],
-                    ["test_drug7", 1, 10, 11, 20, date(2023, 1, 3), 20],
-                    ["test_drug8", 1, 10, 1, 9, date(1900, 1, 1), None],
-                    ["test_drug9", 1, 10, 6, 4, date(1900, 1, 1), None],
+                    # name, entry, exit, stock, last_inventory_date, last_inventory_stock
+                    ["test_drug", 30, 4, 26, date(1900, 1, 1), None],
+                    ["test_drug2", 10, 2, 8, date(1900, 1, 1), None],
+                    ["test_drug3", 10, 2, 19, date(2023, 1, 3), 20],
+                    ["test_drug6", 10, 11, 0, date(1900, 1, 1), None],
+                    ["test_drug7", 10, 11, 20, date(2023, 1, 3), 20],
+                    ["test_drug8", 10, 1, 9, date(1900, 1, 1), None],
+                    ["test_drug9", 10, 6, 4, date(1900, 1, 1), None],
                 ],
                 columns=[
                     "name",
-                    "dose",
                     "entry",
                     "exit",
                     "stock",
@@ -559,7 +553,6 @@ def test_compute_stock_per_ID(
                 [],
                 columns=[
                     "name",
-                    "dose",
                     "entry",
                     "exit",
                     "stock",
@@ -570,7 +563,7 @@ def test_compute_stock_per_ID(
         ),
     ],
 )
-def test_compute_consumption_per_name_dose(
+def test_compute_consumption_per_name(
     db_connection,
     start_date,
     end_date,
@@ -581,7 +574,6 @@ def test_compute_consumption_per_name_dose(
     # Specify groupby columns
     groupby_cols = [
         "name",
-        "dose",
     ]
 
     df_movs = sql_utils.get_all_movements_df(db_connection)
@@ -608,9 +600,6 @@ def test_compute_consumption_per_name_dose(
         # Store in file for if mofidications are made to the database created for testing
         df_consumption.to_csv(path_to_csv, index=False)
 
-    # TODO clean up. Some custom casting
-    df_consumption["dose"] = df_consumption["dose"].astype("int")
-    expected_consumption["dose"] = expected_consumption["dose"].astype("int")
 
     diff = df_consumption.compare(expected_consumption)
 
@@ -624,19 +613,17 @@ def test_compute_consumption_per_name_dose(
             date(3000, 1, 31),
             pd.DataFrame(
                 [
-                    # name, dose, stock, last_inventory_date, last_inventory_stock
-                    ["test_drug", 1, 17, date(1900, 1, 1), None],
-                    ["test_drug", 10, 8, date(1900, 1, 1), None],
-                    ["test_drug2", 1, 8, date(1900, 1, 1), None],
-                    ["test_drug3", 1, 19, date(2023, 1, 3), 20],
-                    ["test_drug6", 1, 0, date(1900, 1, 1), None],
-                    ["test_drug7", 1, 20, date(2023, 1, 3), 20],
-                    ["test_drug8", 1, 9, date(1900, 1, 1), None],
-                    ["test_drug9", 1, 4, date(1900, 1, 1), None],
+                    # name, stock, last_inventory_date, last_inventory_stock
+                    ["test_drug", 25, date(1900, 1, 1), None],
+                    ["test_drug2", 8, date(1900, 1, 1), None],
+                    ["test_drug3", 19, date(2023, 1, 3), 20],
+                    ["test_drug6", 0, date(1900, 1, 1), None],
+                    ["test_drug7", 20, date(2023, 1, 3), 20],
+                    ["test_drug8", 9, date(1900, 1, 1), None],
+                    ["test_drug9", 4, date(1900, 1, 1), None],
                 ],
                 columns=[
                     "name",
-                    "dose",
                     "stock",
                     "last_inventory_date",
                     "last_inventory_stock",
@@ -647,19 +634,17 @@ def test_compute_consumption_per_name_dose(
             date(2023, 1, 2),
             pd.DataFrame(
                 [
-                    # name, dose, entry, exit, stock, last_inventory_date, last_inventory_stock
-                    ["test_drug", 1, 17, date(1900, 1, 1), None],
-                    ["test_drug", 10, 9, date(1900, 1, 1), None],
-                    ["test_drug2", 1, 8, date(1900, 1, 1), None],
-                    ["test_drug3", 1, 9, date(1900, 1, 1), None],
-                    ["test_drug6", 1, 0, date(1900, 1, 1), None],
-                    ["test_drug7", 1, 0, date(1900, 1, 1), None],
-                    ["test_drug8", 1, 9, date(1900, 1, 1), None],
-                    ["test_drug9", 1, 7, date(1900, 1, 1), None],
+                    # name, stock, last_inventory_date, last_inventory_stock
+                    ["test_drug", 26, date(1900, 1, 1), None],
+                    ["test_drug2", 8, date(1900, 1, 1), None],
+                    ["test_drug3", 9, date(1900, 1, 1), None],
+                    ["test_drug6", 0, date(1900, 1, 1), None],
+                    ["test_drug7", 0, date(1900, 1, 1), None],
+                    ["test_drug8", 9, date(1900, 1, 1), None],
+                    ["test_drug9", 7, date(1900, 1, 1), None],
                 ],
                 columns=[
                     "name",
-                    "dose",
                     "stock",
                     "last_inventory_date",
                     "last_inventory_stock",
@@ -670,19 +655,17 @@ def test_compute_consumption_per_name_dose(
             date(2023, 1, 31),
             pd.DataFrame(
                 [
-                    # name, dose, entry, exit, stock, last_inventory_date, last_inventory_stock
-                    ["test_drug", 1, 17, date(1900, 1, 1), None],
-                    ["test_drug", 10, 9, date(1900, 1, 1), None],
-                    ["test_drug2", 1, 8, date(1900, 1, 1), None],
-                    ["test_drug3", 1, 19, date(2023, 1, 3), 20],
-                    ["test_drug6", 1, 0, date(1900, 1, 1), None],
-                    ["test_drug7", 1, 20, date(2023, 1, 3), 20],
-                    ["test_drug8", 1, 9, date(1900, 1, 1), None],
-                    ["test_drug9", 1, 4, date(1900, 1, 1), None],
+                    # name, entry, exit, stock, last_inventory_date, last_inventory_stock
+                    ["test_drug", 26, date(1900, 1, 1), None],
+                    ["test_drug2", 8, date(1900, 1, 1), None],
+                    ["test_drug3", 19, date(2023, 1, 3), 20],
+                    ["test_drug6", 0, date(1900, 1, 1), None],
+                    ["test_drug7", 20, date(2023, 1, 3), 20],
+                    ["test_drug8", 9, date(1900, 1, 1), None],
+                    ["test_drug9", 4, date(1900, 1, 1), None],
                 ],
                 columns=[
                     "name",
-                    "dose",
                     "stock",
                     "last_inventory_date",
                     "last_inventory_stock",
@@ -695,7 +678,6 @@ def test_compute_consumption_per_name_dose(
                 [],
                 columns=[
                     "name",
-                    "dose",
                     "stock",
                     "last_inventory_date",
                     "last_inventory_stock",
@@ -704,13 +686,12 @@ def test_compute_consumption_per_name_dose(
         ),
     ],
 )
-def test_compute_stock_per_name_dose(
+def test_compute_stock_per_name(
     db_connection, end_date, expected_consumption, store_xlsx=True, store_csv=False
 ):
     # Specify groupby columns
     groupby_cols = [
         "name",
-        "dose",
     ]
 
     df_movs = sql_utils.get_all_movements_df(db_connection)
@@ -736,10 +717,6 @@ def test_compute_stock_per_name_dose(
         # Store in file for if mofidications are made to the database created for testing
         df_consumption.to_csv(path_to_csv, index=False)
 
-    # TODO clean up. Some custom casting
-    df_consumption["dose"] = df_consumption["dose"].astype("int")
-    expected_consumption["dose"] = expected_consumption["dose"].astype("int")
-
     diff = df_consumption.compare(expected_consumption)
 
     assert diff.empty
@@ -760,10 +737,10 @@ def test_gen_consumption_per_ID_xlsx(db_connection):
     assert os.path.exists(os.path.join(agg_ID_path, file_name))
 
 
-def test_gen_consumption_per_nome_dosagem_xlsx(db_connection):
+def test_gen_consumption_per_nome_xlsx(db_connection):
     _, _, path_agg_name = reports_utils.create_folders()
-    file_name = "test_consumption_per_nome_dosagem.xlsx"
-    reports_utils.save_xlsx_consumption_nome_dose_type(
+    file_name = "test_consumption_per_nome.xlsx"
+    reports_utils.save_xlsx_consumption_by_drug_name(
         db_connection=db_connection,
         start_date=date(1990, 1, 1),
         end_date=date(3000, 1, 1),
@@ -792,7 +769,7 @@ def test_gen_stock_per_ID_xlsx(db_connection):
 def test_gen_stock_per_nome_dosagem_xlsx(db_connection):
     base_path, _, _ = reports_utils.create_folders()
     file_name = "test_stock_per_nome_dosagem.xlsx"
-    reports_utils.save_stock_nome_dose_type_xlsx(
+    reports_utils.save_stock_per_nome(
         db_connection=db_connection,
         end_date=date(3000, 1, 1),
         folder_path=base_path,
@@ -819,7 +796,7 @@ def test_gen_mov_report_per_ID_txt(db_connection):
 def test_gen_mov_report_per_name_txt(db_connection):
     _, _, path_agg_name = reports_utils.create_folders()
     file_name = "test_mov_per_name.txt"
-    reports_utils.gen_mov_report_nome_dose_type(
+    reports_utils.gen_mov_report_per_nome(
         db_connection=db_connection,
         folder_path=path_agg_name,
         file_name=file_name,
