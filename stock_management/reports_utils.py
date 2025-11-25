@@ -177,7 +177,7 @@ def save_xlsx_consumption(
     folder_path,
     mask=None,
     labels=None,
-    file_name="consumption_per_ID.xlsx",
+    file_name="consumption_by_drug_id.xlsx",
 ):
     # Applying masks
     if mask is not None:
@@ -424,11 +424,11 @@ def create_folders(base_folder_path=BASE_DIR):
     os.makedirs(report_folder_path)
 
     # Create aggregation_ID folder
-    agg_ID_folder_path = os.path.join(report_folder_path, "consumo_ID")
+    agg_ID_folder_path = os.path.join(report_folder_path, "consumo_por_lote")
     os.makedirs(agg_ID_folder_path)
 
     # Create aggregation_nome folder
-    agg_name_folder_path = os.path.join(report_folder_path, "consumo_nome_dosagem_top")
+    agg_name_folder_path = os.path.join(report_folder_path, "consumo_por_nome")
     os.makedirs(agg_name_folder_path)
 
     return report_folder_path, agg_ID_folder_path, agg_name_folder_path
@@ -487,7 +487,7 @@ def save_xlsx_consumption_ID(
     start_date,
     end_date,
     folder_path,
-    file_name="consumption_per_ID.xlsx",
+    file_name="consumption_by_drug_id.xlsx",
 ):
     groupby_cols = [
         "drug_id",
@@ -513,8 +513,6 @@ def save_xlsx_consumption_ID(
 
     mask = [
         "name",
-        "dose",
-        "units",
         "expiration",
         "pieces_per_box",
         "type",
@@ -527,8 +525,6 @@ def save_xlsx_consumption_ID(
     ]
     labels = [
         "nome",
-        "dosagem",
-        "unidades",
         "expiracao",
         "unidades_por_caixa",
         "tipo",
@@ -549,14 +545,14 @@ def save_xlsx_consumption_ID(
     )
 
 
-def save_xlsx_consumption_nome_dose_type(
+def save_xlsx_consumption_by_drug_name(
     db_connection,
     start_date,
     end_date,
     folder_path,
-    file_name="consumption_nome_dose_type.xlsx",
+    file_name="consumption_by_name.xlsx",
 ):
-    groupby_cols = ["name", "dose", "type"]
+    groupby_cols = ["name",]
 
     df_movs = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
@@ -576,8 +572,6 @@ def save_xlsx_consumption_nome_dose_type(
 
     mask = [
         "name",
-        "dose",
-        "type",
         "entry",
         "exit",
         "stock",
@@ -586,8 +580,6 @@ def save_xlsx_consumption_nome_dose_type(
     ]
     labels = [
         "nome",
-        "dosagem",
-        "tipo",
         "entrada",
         "saida",
         "stock",
@@ -607,7 +599,7 @@ def save_xlsx_consumption_nome_dose_type(
 def gen_mov_report_ID(
     db_connection,
     folder_path,
-    file_name="mov_per_ID.txt",
+    file_name="movements_by_drug_id.txt",
 ):
     groupby_cols = [
         "drug_id",
@@ -622,8 +614,6 @@ def gen_mov_report_ID(
 
     mask_col = [
         "name",
-        "dose",
-        "units",
         "expiration",
         "pieces_per_box",
         "type",
@@ -643,12 +633,12 @@ def gen_mov_report_ID(
     )
 
 
-def gen_mov_report_nome_dose_type(
+def gen_mov_report_per_nome(
     db_connection,
     folder_path,
-    file_name="mov_per_nome_dose_type.txt",
+    file_name="movements_by_name.txt",
 ):
-    groupby_cols = ["name", "dose", "type"]
+    groupby_cols = ["name",]
     df_movs = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
 
@@ -659,8 +649,6 @@ def gen_mov_report_nome_dose_type(
 
     mask_col = [
         "name",
-        "dose",
-        "type",
         "date_movement",
         "destination_origin",
         "movement_type",
@@ -680,7 +668,7 @@ def gen_mov_report_nome_dose_type(
 def save_stock_ID_xlsx(
     db_connection,
     folder_path,
-    file_name="stock_per_ID.xlsx",
+    file_name="stock_by_drug_id.xlsx",
     end_date=date(2100, 1, 1),
 ):
     groupby_cols = [
@@ -704,8 +692,6 @@ def save_stock_ID_xlsx(
 
     mask = [
         "name",
-        "dose",
-        "units",
         "expiration",
         "pieces_per_box",
         "type",
@@ -716,8 +702,6 @@ def save_stock_ID_xlsx(
     ]
     labels = [
         "nome",
-        "dosagem",
-        "unidades",
         "expiracao",
         "unidades_por_caixa",
         "tipo",
@@ -736,13 +720,13 @@ def save_stock_ID_xlsx(
     )
 
 
-def save_stock_nome_dose_type_xlsx(
+def save_stock_per_nome(
     db_connection,
     folder_path,
-    file_name="stock_per_nome_dose_type.xlsx",
+    file_name="stock_by_nome.xlsx",
     end_date=date(2100, 1, 1),
 ):
-    groupby_cols = ["name", "dose", "type"]
+    groupby_cols = ["name"]
     df_movs = sql_utils.get_all_movements_df(db_connection)
     df_drugs = sql_utils.get_all_drugs_df(db_connection)
 
@@ -759,16 +743,12 @@ def save_stock_nome_dose_type_xlsx(
 
     mask = [
         "name",
-        "dose",
-        "type",
         "stock",
         "last_inventory_date",
         "last_inventory_stock",
     ]
     labels = [
         "nome",
-        "dosagem",
-        "tipo",
         "stock",
         "ultima_inventario",
         "stock_ultima_inventario",
